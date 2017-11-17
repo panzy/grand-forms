@@ -1,0 +1,20 @@
+// vim: sw=2
+doctype html
+html
+  head
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title= title ? title + ' - ' + siteName : siteName
+
+    script(src='/js/polyfill.min.js')
+    script(src='/js/polyfill-more.js')
+    script(src='/jquery/jquery.min.js')
+
+    // bootstrap (bootstrap js should be after jquery)
+    link(rel='stylesheet', href='/bootstrap/css/bootstrap.css')
+    script(src='/bootstrap/js/bootstrap.js')
+
+    link(rel='stylesheet', href='/css/layout.css')
+    link(rel='stylesheet', href='/css/appearance.css')
+
+  body
+    block content

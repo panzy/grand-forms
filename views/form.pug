@@ -1,0 +1,12 @@
+//- vim: sw=2
+extends layout
+
+block content
+
+  div#app
+
+  script.
+    var PAGENAME = "!{'form-' + mode}";
+    var schema = !{schema || '{}'};
+    var uiSchema = !{uiSchema || '{}'};
+  script(src='/js/bundle.js')
