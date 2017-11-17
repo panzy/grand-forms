@@ -34,8 +34,21 @@ function renderFormEditor() {
 function renderHome() {
   render((
     <div>
-      <h1>{global.siteName || '{siteName}'}</h1>
-      <button className='btn btn-primary form-new' onClick={onCreateForm}>创建表单</button>
+      {/* nav bar */}
+      <div className='navbar navbar-default'>
+        <div className="container-fluid">
+          <div className="navbar-header">
+            <span className="navbar-brand">
+              <img alt='logo' src='/favicon.ico'/>
+              {global.siteName || '{siteName}'}
+            </span>
+          </div>
+          <div className="navbar-right">
+            <button type='button' className='btn btn-default navbar-btn' onClick={onCreateForm}>创建表单</button>
+          </div>
+        </div>
+      </div>
+
       <h2>所有表单</h2>
       <ul className='forms'>
         {

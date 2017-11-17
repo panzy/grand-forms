@@ -5,6 +5,12 @@
 body {
 }
 
+.navbar-brand img {
+  width: 24px;
+  margin-right: 10px;
+  display: inline-block;
+}
+
 #app.view {
   padding-top: 10px;
   padding-bottom: 10px;
