@@ -61,6 +61,26 @@ function handleFormEditReq(req, res) {
 
     form.parse(req, function(err, fields, files) {
       logger.debug('form editor post fields', fields);
+
+      // validate
+      if (fields.schema) {
+        try {
+          JSON.parse(fields.schema[0]);
+        } catch (err) {
+          res.status(400).send('invalid schema: ' + err.message);
+          return;
+        }
+      }
+      if (fields.uiSchema) {
+        try {
+          JSON.parse(fields.uiSchema[0]);
+        } catch (err) {
+          res.status(400).send('invalid UI schema: ' + err.message);
+          return;
+        }
+      }
+
+      // save
       if (fields.schema) {
         var filename = dataDir + 'schema-' + req.params.id + '.json';
         var data = fields.schema[0];

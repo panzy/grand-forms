@@ -41,6 +41,7 @@ class FormEditor extends Component {
         toast.success('已保存');
       } else {
         toast.error('保存失败： ' + r.status + ' ' + r.statusText);
+        r.text().then(text => console.error(text));
       }
     });
     event.preventDefault();
