@@ -7,6 +7,8 @@ import brace from 'brace';
 import 'brace/mode/json';
 import 'brace/theme/monokai';
 
+import { ToastContainer, toast } from 'react-toastify';
+
 class FormEditor extends Component {
   constructor(props) {
     super(props);
@@ -35,11 +37,14 @@ class FormEditor extends Component {
     data.append('schema', this.state.schema);
     data.append('uiSchema', this.state.uiSchema);
     fetch(window.location.href, { method: 'POST', body: data }).then(r => {
-      console.log(r.status);
+      if (r.ok) {
+        toast.success('已保存');
+      } else {
+        toast.error('保存失败： ' + r.status + ' ' + r.statusText);
+      }
     });
     event.preventDefault();
   }
-
 
   render() {
     var preview = null;
@@ -54,6 +59,9 @@ class FormEditor extends Component {
       preview = <div className='alert alert-danger'>error</div>;
     };
 
+    var l = window.location;
+    var previewUrl = l.protocol + '//' + l.host + l.pathname.replace(/\/edit$/, '/view') + l.search;
+
     return <div className='form-editor'>
       {/* nav bar */}
       <div className='navbar navbar-default'>
@@ -63,6 +71,11 @@ class FormEditor extends Component {
               <a className="back glyphicon glyphicon-arrow-left" href="/forms" title="首页"></a>
               {this.props.schema.title || '未命名表单'}
             </span>
+          </div>
+          <div className="navbar-right">
+            <button type="button" className="btn btn-success navbar-btn" onClick={this.handleSubmit}>保存</button>
+            &nbsp;
+            <a href={previewUrl} target='_blank' className="btn btn-default navbar-btn">预览</a>
           </div>
         </div>
       </div>
@@ -110,10 +123,6 @@ class FormEditor extends Component {
                     tabSize: 2,
                 }}/>
             </div>
-
-            <div>
-              <input type="submit" className='btn btn-primary' value="保存表单" />
-            </div>
           </form>
         </div>
         <div className='col-sm-3'>
@@ -121,6 +130,15 @@ class FormEditor extends Component {
           {preview}
         </div>
       </div>
+
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnHover
+      />
     </div>;
   }
 }
