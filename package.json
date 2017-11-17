@@ -12,6 +12,7 @@
   "author": "pan.zhiyong@grandlynn.com",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "express": "^4.13.4",
     "express-minify": "^0.2.0",
     "express-session": "^1.14.2",
@@ -19,11 +20,12 @@
     "fs-readfile-promise": "^3.0.0",
     "logger": "git+https://github.com/panzy/node-logger.git",
     "method-override": "^2.3.6",
+    "mkdirp": "^0.5.1",
     "morgan": "^1.7.0",
     "multiparty": "^4.1.2",
-    "session-file-store": "^1.0.0",
     "pug": "^2.0.0-beta6",
     "react-jsonschema-form": "^1.0.0",
+    "session-file-store": "^1.0.0",
     "uuid": "^3.1.0"
   },
   "devDependencies": {

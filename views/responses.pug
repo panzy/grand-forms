@@ -3,10 +3,21 @@ extends layout
 
 block content
 
-  div#app(class=mode)
+  h1= title
+
+  table.table
+    tr
+      each item in schema.properties
+        th= item.title
+    each row in responses
+      tr
+        each prop, key in schema.properties
+          td= row[key]
+
 
   script.
     var PAGENAME = "!{'form-' + mode}";
     var schema = !{schema || '{}'};
     var uiSchema = !{uiSchema || '{}'};
   script(src='/js/bundle.js')
+

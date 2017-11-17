@@ -2,16 +2,16 @@
  * vim: sw=2
  */
 
-#form-area {
-  max-width: 900px;
+body {
 }
 
-textarea#schema {
-  width: 100%;
-  height: 300px;
+#app.view {
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
-textarea#uiSchema {
-  width: 100%;
-  height: 300px;
+.form-view {
+  max-width: 600px;
+  padding: 30px 10px 30px 10px;
+  margin: 0px auto;
 }

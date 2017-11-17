@@ -62,6 +62,7 @@ class FormEditor extends Component {
 
     var l = window.location;
     var previewUrl = l.protocol + '//' + l.host + l.pathname.replace(/\/edit$/, '/view') + l.search;
+    var responseUrl = l.protocol + '//' + l.host + l.pathname.replace(/\/edit$/, '/resp') + l.search;
 
     return <div className='form-editor'>
       {/* nav bar */}
@@ -77,6 +78,8 @@ class FormEditor extends Component {
             <button type="button" className="btn btn-success navbar-btn" onClick={this.handleSubmit}>保存</button>
             &nbsp;
             <a href={previewUrl} target='_blank' className="btn btn-default navbar-btn">预览</a>
+            &nbsp;
+            <a href={responseUrl} target='_blank' className="btn btn-default navbar-btn">数据</a>
           </div>
         </div>
       </div>

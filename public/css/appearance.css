@@ -15,56 +15,8 @@ a:hover, a:focus {
   color: #44aa99;
 }
 
-/*
- * 重写 bootstrap .btn-primary 的颜色
- */
 
-.btn-primary {
-  background-color: #3498db;
-  border-color: #3498db;
-}
-.btn-primary:hover {
-  background-color: #2e8dd7;
-  border-color: #2e8dd7;
-}
-.btn-primary:active:hover,
-.btn-primary.active:hover,
-.open > .dropdown-toggle.btn-primary:hover,
-.btn-primary:active:focus,
-.btn-primary.active:focus,
-.open > .dropdown-toggle.btn-primary:focus,
-.btn-primary:active.focus,
-.btn-primary.active.focus,
-.open > .dropdown-toggle.btn-primary.focus {
-  background-color: #2e8dd7;
-  border-color: #2e8dd7;
-}
-
-/*
- * 重写 bootstrap .btn-danger 的颜色
- */
-
-.btn-danger {
-  background-color: #f4511e;
-  border-color: #f4511e;
-}
-.btn-danger:hover {
-  background-color: #f14018;
-  border-color: #f14018;
-}
-.btn-danger:active:hover,
-.btn-danger.active:hover,
-.open > .dropdown-toggle.btn-danger:hover,
-.btn-danger:active:focus,
-.btn-danger.active:focus,
-.open > .dropdown-toggle.btn-danger:focus,
-.btn-danger:active.focus,
-.btn-danger.active.focus,
-.open > .dropdown-toggle.btn-danger.focus {
-  background-color: #f14018;
-  border-color: #f14018;
-}
-
+/*****************************************************************************/
 /*
  * 滚动条的样式
  */
@@ -97,11 +49,26 @@ a:hover, a:focus {
 
 /*****************************************************************************/
 
-a.form-editor,
-a.form-view {
-  color: gray;
+#app.view {
+  background-color: rgb(231,238,247);
+  background-image: url('//ssl.gstatic.com/docs/forms/themes/images/v1/0AX42CRMsmRFbUy03NTAzM2Q4My03ODU1LTQ2NzItODI2YS1kZmU5YzdiMzZjOGQ/blue-stripe-bg.png');
+  background-repeat: repeat;
 }
 
 .navbar-header .back {
   padding-right: 10px;
+}
+
+ul.forms {
+  font-size: 1.5em;
+}
+
+ul.forms a.view {
+  color: gray;
+  font-size: 0.8em;
+}
+
+.form-view {
+  background-color: white;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
