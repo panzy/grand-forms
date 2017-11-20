@@ -21,3 +21,10 @@ body {
   padding: 30px 10px 30px 10px;
   margin: 0px auto;
 }
+
+.table.responses img.attachment {
+  height: 100px;
+}
+.table.responses video.attachment {
+  height: 200px;
+}
