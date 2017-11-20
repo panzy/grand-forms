@@ -12,7 +12,6 @@
   "author": "pan.zhiyong@grandlynn.com",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.18.2",
     "express": "^4.13.4",
     "express-minify": "^0.2.0",
     "express-session": "^1.14.2",
@@ -24,6 +23,7 @@
     "morgan": "^1.7.0",
     "multiparty": "^4.1.2",
     "pug": "^2.0.0-beta6",
+    "raw-body": "^2.3.2",
     "react-jsonschema-form": "^1.0.0",
     "session-file-store": "^1.0.0",
     "uuid": "^3.1.0"

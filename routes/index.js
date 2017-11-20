@@ -1,7 +1,7 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const fetch = require('node-fetch')
 const fs = require('fs');
+const getRawBody = require('raw-body');
 const mkdirp = require('mkdirp');
 const multiparty = require('multiparty');
 const path = require('path');
@@ -22,8 +22,8 @@ logger.setLevel(process.env.LOG_LEVEL || 'debug');
 // routes
 
 router.get('/forms/:id/view', handleFormViewReq);
-router.post('/forms/:id/view', bodyParser.json(), handleFormViewReq);
-router.post('/forms/:id', bodyParser.json(), handleFormViewReq);
+router.post('/forms/:id/view', handleFormViewReq);
+router.post('/forms/:id', handleFormViewReq);
 router.get('/forms/:id/edit', handleFormEditReq);
 router.post('/forms/:id/edit', handleFormEditReq);
 router.get('/forms/:id/resp', handleFormRespReq);
@@ -166,8 +166,11 @@ function handleFormViewReq(req, res) {
     if (req.headers['content-type'] !== 'application/json') {
       res.status(400).send('invalid content-type, expect application/json, actual ' + req.headers['content-type'] + '.');
     } else {
-      logger.debug('post form data:', req.body);
-      if (req.body) {
+      getRawBody(req, {
+        length: req.headers['content-length'],
+        limit: '20mb'
+      }).then(buf => {
+        logger.debug('post form data:', buf);
         var outputDir = path.join(dataDir, 'responses', req.params.id);
         var filename = new Date().getTime() + '_' + uuidv4().substr(0, 4) + '.json';
         var outputPath = path.join(outputDir, filename);
@@ -176,7 +179,7 @@ function handleFormViewReq(req, res) {
             logger.error(err);
             res.status(500).send(err.message);
           } else {
-            fs.writeFile(outputPath, JSON.stringify(req.body), (err) => {
+            fs.writeFile(outputPath, buf, (err) => {
               if (err) {
                 logger.error(err);
                 res.status(500).send(err.message);
@@ -186,9 +189,10 @@ function handleFormViewReq(req, res) {
             });
           }
         });
-      } else {
-        res.status(400).send('require POST body');
-      }
+      }).catch(err => {
+        logger.error(err);
+        res.status(500).end(err.message)
+      });
     }
   } else {
     openForm('view', req, res);
