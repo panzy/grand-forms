@@ -49,16 +49,18 @@ function renderHome() {
         </div>
       </div>
 
-      <h2>所有表单</h2>
-      <ul className='forms'>
-        {
-          global.forms.map(f =>
-            <li key={f.id}>
-              <a className='edit' href={`/forms/${f.id}/edit`}>{f.title}</a>
-            </li>
-          )
-        }
-      </ul>
+      <div className='col-sm-12'>
+        <h2>所有表单</h2>
+        <ul className='forms'>
+          {
+            global.forms.map(f =>
+              <li key={f.id}>
+                <a className='edit' href={`/forms/${f.id}/edit`}>{f.title}</a>
+              </li>
+            )
+          }
+        </ul>
+      </div>
     </div>
   ), document.getElementById("app"));
 }
