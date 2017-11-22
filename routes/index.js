@@ -21,20 +21,20 @@ logger.setLevel(process.env.LOG_LEVEL || 'debug');
 ////////////////////////////////////////////////////////////////////////////////
 // routes
 
-router.get('/forms/:id/view', handleFormViewReq);
-router.post('/forms/:id/view', handleFormViewReq);
-router.post('/forms/:id', handleFormViewReq);
-router.get('/forms/:id/edit', handleFormEditReq);
-router.post('/forms/:id/edit', handleFormEditReq);
-router.get('/forms/:id/resp', handleFormRespReq);
-router.get('/forms/:id', handleFormViewReq);
-router.get('/forms', handleFormIndexReq);
 router.get('/', handleIndexReq);
+router.get('/api/forms', handleFormIndexReq);
+router.get('/api/forms/:id', handleFormGet);
+router.post('/api/forms/:id', handleFormPost);
+router.put('/api/forms/:id', handleFormPut);
+router.get('/api/forms/:id/resp', handleFormRespReq);
 
 ////////////////////////////////////////////////////////////////////////////////
 // functions
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * list forms.
+ */
 function handleFormIndexReq(req, res) {
   fs.readdir(dataDir + 'forms/', (err, files) => {
     if (err) {
@@ -49,7 +49,7 @@ function handleFormIndexReq(req, res) {
           }
         }));
       Promise.all(readings).then(forms => {
-        res.render('index', {forms});
+        res.send(forms);
       }).catch(err => {
         logger.error(err);
         res.status(500).send(err.message);
@@ -58,57 +58,53 @@ function handleFormIndexReq(req, res) {
   });
 }
 
-function handleFormEditReq(req, res) {
-  if (req.method === 'POST') {
-    // post schema
+function handleFormPut(req, res) {
+  // post schema
 
-    var form = new multiparty.Form();
+  var form = new multiparty.Form();
 
-    form.parse(req, function(err, fields, files) {
-      logger.debug('form editor post fields', fields);
+  form.parse(req, function(err, fields, files) {
+    logger.debug('form editor post fields', fields);
 
-      // validate
-      if (fields.schema) {
-        try {
-          JSON.parse(fields.schema[0]);
-        } catch (err) {
-          res.status(400).send('invalid schema: ' + err.message);
-          return;
+    // validate
+    if (fields.schema) {
+      try {
+        JSON.parse(fields.schema[0]);
+      } catch (err) {
+        res.status(400).send('invalid schema: ' + err.message);
+        return;
+      }
+    }
+    if (fields.uiSchema) {
+      try {
+        JSON.parse(fields.uiSchema[0]);
+      } catch (err) {
+        res.status(400).send('invalid UI schema: ' + err.message);
+        return;
+      }
+    }
+
+    // save
+    if (fields.schema) {
+      var filename = dataDir + 'forms/' + req.params.id + '.json';
+      var data = fields.schema[0];
+      fs.writeFile(filename, data, (err) => {
+        if (err) {
+          logger.error(err);
         }
-      }
-      if (fields.uiSchema) {
-        try {
-          JSON.parse(fields.uiSchema[0]);
-        } catch (err) {
-          res.status(400).send('invalid UI schema: ' + err.message);
-          return;
+      });
+    }
+    if (fields.uiSchema) {
+      var filename = dataDir + 'forms/' + req.params.id + '.ui.json';
+      var data = fields.uiSchema[0];
+      fs.writeFile(filename, data, (err) => {
+        if (err) {
+          logger.error(err);
         }
-      }
-
-      // save
-      if (fields.schema) {
-        var filename = dataDir + 'forms/' + req.params.id + '.json';
-        var data = fields.schema[0];
-        fs.writeFile(filename, data, (err) => {
-          if (err) {
-            logger.error(err);
-          }
-        });
-      }
-      if (fields.uiSchema) {
-        var filename = dataDir + 'forms/' + req.params.id + '.ui.json';
-        var data = fields.uiSchema[0];
-        fs.writeFile(filename, data, (err) => {
-          if (err) {
-            logger.error(err);
-          }
-        });
-      }
-      res.send('ok');
-    });
-  } else {
-    openForm('edit', req, res);
-  }
+      });
+    }
+    res.send('ok');
+  });
 }
 
 function handleFormRespReq(req, res) {
@@ -136,113 +132,89 @@ function handleFormRespReq(req, res) {
           return JSON.parse(buf.toString());
         }));
 
-      return Promise.all(readingResps).then(responses => {
-        //res.send({schema, responses});
-        res.render('responses', {title: schema.title, schema, responses});
+      return Promise.all(readingResps).then(items => {
+        res.send({schema, items});
       });
     }, err => {
       if (err.code === 'ENOENT') {
          // no responses
-        res.render('responses', {title: schema.title, schema, responses: []});
+        res.send({schema, items: []});
       } else {
         throw err;
       }
     });
   }, err => {
     if (err.code === 'ENOENT') {
-      res.render('404', {message: '找不到表单 ' + req.params.id});
+      res.status(404).send('找不到表单 ' + req.params.id);
     } else {
       throw err;
     }
   }).catch(err => {
     logger.error(err);
-    res.render('500', {message: err.message});
+    res.status(500, err.message);
   });
 }
 
-function handleFormViewReq(req, res) {
-  if (req.method === 'POST') {
-    // 用户提交了表单
-    if (req.headers['content-type'] !== 'application/json') {
-      res.status(400).send('invalid content-type, expect application/json, actual ' + req.headers['content-type'] + '.');
-    } else {
-      getRawBody(req, {
-        length: req.headers['content-length'],
-        limit: '20mb'
-      }).then(buf => {
-        logger.debug('post form data:', buf);
-        var outputDir = path.join(dataDir, 'responses', req.params.id);
-        var filename = new Date().getTime() + '_' + uuidv4().substr(0, 4) + '.json';
-        var outputPath = path.join(outputDir, filename);
-        mkdirp(outputDir, err => {
-          if (err) {
-            logger.error(err);
-            res.status(500).send(err.message);
-          } else {
-            fs.writeFile(outputPath, buf, (err) => {
-              if (err) {
-                logger.error(err);
-                res.status(500).send(err.message);
-              } else {
-                res.send(`已保存，共 ${req.headers['content-length']} 字节。`);
-              }
-            });
-          }
-        });
-      }).catch(err => {
-        logger.error(err);
-        res.status(500).end(err.message)
-      });
-    }
+/**
+ * 提交表单。
+ */
+function handleFormPost(req, res) {
+  // 用户提交了表单
+  if (req.headers['content-type'] !== 'application/json') {
+    res.status(400).send('invalid content-type, expect application/json, actual ' + req.headers['content-type'] + '.');
   } else {
-    openForm('view', req, res);
+    getRawBody(req, {
+      length: req.headers['content-length'],
+      limit: '20mb'
+    }).then(buf => {
+      logger.debug('post form data:', buf);
+      var outputDir = path.join(dataDir, 'responses', req.params.id);
+      var filename = new Date().getTime() + '_' + uuidv4().substr(0, 4) + '.json';
+      var outputPath = path.join(outputDir, filename);
+      mkdirp(outputDir, err => {
+        if (err) {
+          logger.error(err);
+          res.status(500).send(err.message);
+        } else {
+          fs.writeFile(outputPath, buf, (err) => {
+            if (err) {
+              logger.error(err);
+              res.status(500).send(err.message);
+            } else {
+              res.send(`已保存，共 ${req.headers['content-length']} 字节。`);
+            }
+          });
+        }
+      });
+    }).catch(err => {
+      logger.error(err);
+      res.status(500).end(err.message)
+    });
   }
 }
 
 function handleIndexReq(req, res) {
-  handleFormIndexReq(req, res);
+  res.send('Grand Forms backend');
 }
 
 /**
- * 处理表单的预览或编辑请求。
- *
- * @arg {string} mode "view" or "edit".
- * @arg {Request} req
- * @arg {Response} res
+ * 返回表单配置信息。
  */
-function openForm(mode, req, res) {
+function handleFormGet(req, res) {
 
   var schemaFilename = dataDir + `/forms/${req.params.id}.json`;
   var uiSchemaFilename = dataDir + `/forms/${req.params.id}.ui.json`;
 
   readFile(schemaFilename).then(schemaBuf => {
-    var schema = schemaBuf.toString();
-    var title = JSON.parse(schema).title;
+    var schema = JSON.parse(schemaBuf.toString());
+    var title = schema.title;
     return readFile(uiSchemaFilename).then(uiSchemaBuf => {
-      var uiSchema = uiSchemaBuf.toString();
-      res.render('form', {
-        mode,
-        title,
-        schema,
-        uiSchema,
-      });
+      var uiSchema = JSON.parse(uiSchemaBuf.toString());
+      res.send({schema, uiSchema});
     }).catch(err => {
       // UI schema is optional
-      res.render('form', {
-        mode,
-        title,
-        schema,
-      });
+      res.send({schema});
     });
-  }, err => {
-    if (mode === 'edit' && err.code === 'ENOENT') {
-      // 创建新表单
-      res.render('form', {
-        mode,
-      });
-    } else {
-      throw err;
-    }
   }).catch(err => {
     if (err.code === 'ENOENT') {
       res.status(404).send('找不到表单 ' + req.params.id);

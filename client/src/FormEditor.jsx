@@ -8,7 +8,23 @@ import 'brace/mode/json';
 import 'brace/theme/monokai';
 
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.min.css';
 
+// react-toastify 似乎不兼容 react@16.
+const toastStub = {
+  success: (msg) => alert(msg),
+  error: (msg) => alert(msg),
+};
+
+/**
+ * @prop {string} fomrId
+ * @prop {object} schema
+ * @prop {object} uiSchema
+ * @prop {object} [formData]
+ * @prop {function} [onBackPressed]
+ * @prop {function} [onResponsesPressed]
+ * @prop {string} [backTitle] title for nav back button.
+ */
 class FormEditor extends Component {
   constructor(props) {
     super(props);
@@ -17,6 +33,7 @@ class FormEditor extends Component {
       schema: JSON.stringify(this.props.schema, null, "  "),
       uiSchema: JSON.stringify(this.props.uiSchema, null, "  ")
     };
+    console.log('form schema', this.state.schema);
 
     this.handleSchemaChange = this.handleSchemaChange.bind(this);
     this.handleUiSchemaChange = this.handleUiSchemaChange.bind(this);
@@ -36,11 +53,11 @@ class FormEditor extends Component {
     console.log('form editor state', this.state);
     data.append('schema', this.state.schema);
     data.append('uiSchema', this.state.uiSchema);
-    fetch(window.location.href, { method: 'POST', body: data }).then(r => {
+    fetch('/api/forms/' + this.props.formId, { method: 'PUT', body: data }).then(r => {
       if (r.ok) {
-        toast.success('已保存');
+        toastStub.success('已保存');
       } else {
-        toast.error('保存失败： ' + r.status + ' ' + r.statusText);
+        toastStub.error('保存失败： ' + r.status + ' ' + r.statusText);
         r.text().then(text => console.error(text));
       }
     });
@@ -55,14 +72,14 @@ class FormEditor extends Component {
       var uiSchemaObj = JSON.parse(this.state.uiSchema);
       preview = <Form
         schema={schemaObj}
-        uiSchema={uiSchemaObj}/>;
+        uiSchema={uiSchemaObj}
+        formData={this.props.formData}/>;
     } catch (err) {
       preview = <div className='alert alert-danger'>error</div>;
     };
 
     var l = window.location;
-    var previewUrl = l.protocol + '//' + l.host + l.pathname.replace(/\/edit$/, '/view') + l.search;
-    var responseUrl = l.protocol + '//' + l.host + l.pathname.replace(/\/edit$/, '/resp') + l.search;
+    var viewUrl = '/forms/' + this.props.formId;
 
     return <div className='form-editor'>
       {/* nav bar */}
@@ -70,16 +87,17 @@ class FormEditor extends Component {
         <div className="container-fluid">
           <div className="navbar-header">
             <span className="navbar-brand">
-              <a className="back glyphicon glyphicon-arrow-left" href="/forms" title="首页"></a>
+              <a className="back glyphicon glyphicon-arrow-left" href="#" title={this.props.backTitle || "返回"}
+                onClick={this.props.onBackPressed}></a>
               {this.props.schema.title || '未命名表单'}
             </span>
           </div>
           <div className="navbar-right">
             <button type="button" className="btn btn-success navbar-btn" onClick={this.handleSubmit}>保存</button>
             &nbsp;
-            <a href={previewUrl} target='_blank' className="btn btn-default navbar-btn">预览</a>
+            <a href={viewUrl} target='_blank' className="btn btn-default navbar-btn">使用表单</a>
             &nbsp;
-            <a href={responseUrl} target='_blank' className="btn btn-default navbar-btn">数据</a>
+            <button type="button" className="btn btn-default navbar-btn" onClick={this.props.onResponsesPressed}>查看数据</button>
           </div>
         </div>
       </div>
@@ -135,6 +153,7 @@ class FormEditor extends Component {
         </div>
       </div>
 
+      <p> ToastContainer </p>
       <ToastContainer
         position="top-center"
         autoClose={5000}
@@ -147,4 +166,4 @@ class FormEditor extends Component {
   }
 }
 
-module.exports = FormEditor;
+export default FormEditor;

@@ -71,5 +71,5 @@ class FormView extends Component {
   }
 }
 
-module.exports = FormView;
+export default FormView;
 

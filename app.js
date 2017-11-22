@@ -38,7 +38,8 @@ if (process.env.NO_MINIFY !== 'true') {
   app.use(minify());
 }
 
-app.use(express.static(__dirname + '/public'));
+// 静态目录指向 client 子工程的 webpack build。
+app.use(express.static(__dirname + '/client/build'));
 app.use(require('morgan')('dev'));
 app.use(require('method-override')());
 
