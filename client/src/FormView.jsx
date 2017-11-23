@@ -7,7 +7,13 @@ import brace from 'brace';
 import 'brace/mode/json';
 import 'brace/theme/monokai';
 
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer, toast_ } from 'react-toastify';
+
+// XXX react-toastify does not work
+var toast = {
+  success: (msg) => alert(msg),
+  error: (msg) => alert(msg),
+};
 
 /**
  * @prop {string} id form id
