@@ -24,6 +24,7 @@ logger.setLevel(process.env.LOG_LEVEL || 'debug');
 router.get('/', handleIndexReq);
 router.get('/api/forms', handleFormIndexReq);
 router.get('/api/forms/:id', handleFormGet);
+router.delete('/api/forms/:id', handleFormDelete);
 router.post('/api/forms/:id', handleFormPost);
 router.put('/api/forms/:id', handleFormPut);
 router.get('/api/forms/:id/resp', handleFormRespReq);
@@ -152,6 +153,47 @@ function handleFormRespReq(req, res) {
   }).catch(err => {
     logger.error(err);
     res.status(500, err.message);
+  });
+}
+
+/**
+ * 删除表单。
+ */
+function handleFormDelete(req, res) {
+  // 出于以下考虑，我们并不从文件系统上删除表单文件，而只是移动到 trash 目录：
+  // 1. 允许撤销；
+  // 2. 表单数据(responses)不应连带删除，而表单数据需要 schema；
+  var trashDir = path.join(dataDir, 'forms', 'trash');
+  var schemaFile = path.join(dataDir, 'forms', req.params.id + '.json');
+  var schemaFileDel = path.join(trashDir, req.params.id + '.json');
+  var uiSchemaFile = path.join(dataDir, 'forms', req.params.id + '.ui.json');
+  var uiSchemaFileDel = path.join(trashDir, req.params.id + '.ui.json');
+
+  mkdirp(trashDir, err => {
+    if (err) {
+      logger.error(err);
+      res.status(500).send(err.message);
+    } else {
+      // delete schema
+      fs.rename(schemaFile, schemaFileDel, (err) => {
+        if (err) {
+          if (err.code === 'ENOENT') {
+            res.status(404).end();
+          } else {
+            res.status(500).send(err.message);
+          }
+        } else {
+          res.status(204).end();
+        }
+      });
+
+      // delete ui schema
+      fs.rename(uiSchemaFile, uiSchemaFileDel, (err) => {
+        if (err && err.code !== 'ENOENT') {
+          logger.error(err);
+        }
+      });
+    }
   });
 }
 

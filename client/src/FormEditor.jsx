@@ -40,6 +40,7 @@ class FormEditor extends Component {
 
     this.handleSchemaChange = this.handleSchemaChange.bind(this);
     this.handleUiSchemaChange = this.handleUiSchemaChange.bind(this);
+    this.handleDelete = this.handleDelete.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
@@ -94,6 +95,17 @@ class FormEditor extends Component {
     this.setState({uiSchema, uiSchemaJson: value});
   }
 
+  handleDelete() {
+    fetch('/api/forms/' + this.props.id, { method: 'DELETE' }).then(r => {
+      if (r.ok) {
+        toastStub.success('表单已删除');
+      } else {
+        toastStub.error('删除失败： ' + r.status + ' ' + r.statusText);
+        r.text().then(text => console.error(text));
+      }
+    });
+  }
+
   handleSubmit(event) {
     var data = new FormData();
     console.log('form editor state', this.state);
@@ -134,6 +146,7 @@ class FormEditor extends Component {
             <a href='#' onClick={this.handleSubmit}>保存</a>,
             <a href={viewUrl} target='_blank'>使用表单</a>,
             <a href={respUrl} target='_blank'>查看数据</a>,
+            <a href='#' onClick={this.handleDelete}>删除表单</a>,
           ]}
         />
       );
