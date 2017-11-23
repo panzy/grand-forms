@@ -3,18 +3,10 @@
  */
 
 body {
+  background-color: rgb(231,238,247);
+  background-image: url('//ssl.gstatic.com/docs/forms/themes/images/v1/0AX42CRMsmRFbUy03NTAzM2Q4My03ODU1LTQ2NzItODI2YS1kZmU5YzdiMzZjOGQ/blue-stripe-bg.png');
+  background-repeat: repeat;
 }
-
-a {
-  text-decoration: none;
-  color: #008080;
-}
-
-a:hover, a:focus {
-  text-decoration: none;
-  color: #44aa99;
-}
-
 
 /*****************************************************************************/
 /*
@@ -49,14 +41,21 @@ a:hover, a:focus {
 
 /*****************************************************************************/
 
-#app.view {
-  background-color: rgb(231,238,247);
-  background-image: url('//ssl.gstatic.com/docs/forms/themes/images/v1/0AX42CRMsmRFbUy03NTAzM2Q4My03ODU1LTQ2NzItODI2YS1kZmU5YzdiMzZjOGQ/blue-stripe-bg.png');
-  background-repeat: repeat;
+.navbar {
+  border-radius: 0px;
 }
 
 .navbar-header .back {
   padding-right: 10px;
+}
+
+.navbar-header .navbar-brand a {
+  color: #fff;
+  text-decoration: none;
+}
+.navbar-header .navbar-brand a:hover,
+.navbar-header .navbar-brand a:focus {
+  color: #ecdbff;
 }
 
 ul.forms {

@@ -79,7 +79,11 @@ class App extends Component {
     return (
       <div>
         <Navbar
-          actions={<button type='button' className='btn btn-success navbar-btn' onClick={this.onCreateForm}>创建表单</button>}
+          actions={
+            <ul className='nav navbar-nav'>
+              <li><a href='#' onClick={this.onCreateForm}>创建表单</a></li>
+            </ul>
+          }
         />
 
         <div className='col-sm-12'>

@@ -131,11 +131,9 @@ class FormEditor extends Component {
           backUrl='/'
           backTitle='所有表单'
           actions={[
-            <button key='save' type="button" className="btn btn-success navbar-btn" onClick={this.handleSubmit}>保存</button>,
-            <span key='sep1'>&nbsp;</span>,
-            <a key='view' href={viewUrl} target='_blank' className="btn btn-default navbar-btn">使用表单</a>,
-            <span key='sep2'>&nbsp;</span>,
-            <a key='resp' href={respUrl} target='_blank' className="btn btn-default navbar-btn">查看数据</a>,
+            <a href='#' onClick={this.handleSubmit}>保存</a>,
+            <a href={viewUrl} target='_blank'>使用表单</a>,
+            <a href={respUrl} target='_blank'>查看数据</a>,
           ]}
         />
       );

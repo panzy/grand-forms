@@ -8,12 +8,20 @@ import React, { Component } from 'react';
  * @prop {Component|Array<Component>} [actions] 比如一些 buttons。
  */
 function Navbar(props) {
-  var logo;
+  var logo, actions;
   if (props.backUrl) {
     logo = <a className="back glyphicon glyphicon-arrow-left" href={props.backUrl} title={props.backTitle || '返回'}/>;
   } else {
     logo = <img alt='logo' src='/favicon.ico'/>;
   }
+
+  if (Array.isArray(props.actions))
+    actions = props.actions.map((a, idx) => <li key={idx}>{a}</li>);
+  else if (props.actions)
+    actions = <li>{props.actions}</li>;
+  else
+    actions = null;
+
   return (
     <div className='navbar navbar-default'>
       <div className="container-fluid">
@@ -25,7 +33,7 @@ function Navbar(props) {
           </span>
         </div>
         <div className="navbar-right">
-          {props.actions}
+          <ul className='nav navbar-nav'> {actions} </ul>
         </div>
       </div>
     </div>
