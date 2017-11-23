@@ -8,9 +8,6 @@ const LOAD_FAILED = 2;
 
 /**
  * @prop {string} id
- * @prop {string} [title]
- * @prop {string} [backTitle] title for nav back button.
- * @prop {object} items
  */
 class FormResponses extends Component {
   constructor(props) {
@@ -48,54 +45,77 @@ class FormResponses extends Component {
     } else if (this.state.loading === LOAD_FAILED) {
       table = <div className='alert alert-danger'>加载数据失败</div>;
     } else if (this.state.loading === LOADED) {
-      var tableHeaders = Object.entries(this.state.schema.properties).map(kv =>
-        <th key={kv[0]}>{kv[1].title}</th>);
-      var tableRows = this.state.items.map((row, rowId) => {
-        var cells = Object.entries(this.state.schema.properties).map(kv => {
-          const [key, prop] = kv; // prop key, prop description
-          if (prop.type === 'boolean') {
-            return <td key={key}>{row[key] ? 'y' : 'n'}</td>;
-          } else if (prop.format === 'data-url') {
-            if (row[key]) {
-              var mediaTag = null;
-              var m = row[key].match(/name=([^;]+);/);
-              var filename = m ? m[1] : '';
-              if (row[key].startsWith('data:image'))
-                mediaTag = <img className='attachment' src={row[key]}/>;
-              else if (row[key].startsWith('data:audio'))
-                mediaTag = <audio className='attachment' src={row[key]} controls="controls"/>;
-              else if (row[key].startsWith('data:video'))
-                mediaTag = <video className='attachment' src={row[key]} controls="controls"/>;
-              return <td key={key}>
-                {mediaTag}
-                <div>
-                  <a href={row[key]} download={filename}>{'[附件] ' + filename}</a>
-                </div>
-              </td>;
-            } else {
-              return <td key={key}></td>;
-            }
-          } else {
-            return <td key={key}>{row[key]}</td>;
-          }
-        });
-        return <tr key={rowId}>{cells}</tr>;
-      });
-      table = <table className='table responses'>
-        <thead>
-          <tr>{tableHeaders}</tr>
-        </thead>
-        <tbody>
-          {tableRows}
-        </tbody>
-      </table>;
+      switch (this.state.schema.type) {
+        case 'object':
+          var tableHeaders = Object.entries(this.state.schema.properties).map(kv =>
+            <th key={kv[0]}>{kv[1].title}</th>);
+          var tableRows = this.state.items.map((row, rowId) => {
+            var cells = Object.entries(this.state.schema.properties).map(kv => {
+              const [key, {type, format}] = kv;
+              return <Cell value={row[key]} type={type} format={format}/>;
+            });
+            return <tr key={rowId}>{cells}</tr>;
+          });
+          table = <table className='table responses'>
+            <thead>
+              <tr>{tableHeaders}</tr>
+            </thead>
+            <tbody>
+              {tableRows}
+            </tbody>
+          </table>;
+          break;
+        case 'string':
+          var tableRows = this.state.items.map((value, rowId) => <tr key={rowId}><Cell value={value} type='string'/></tr>);
+          table = <table className='table responses'>
+            <thead>
+              <tr><th>值</th></tr>
+            </thead>
+            <tbody>
+              {tableRows}
+            </tbody>
+          </table>;
+          break;
+        default:
+          table = <pre>{JSON.stringify(this.state.items, null, "  ")}</pre>;
+          break;
+      }
     }
     return <div className='form-responses'>
       <Navbar
-        title={this.props.title || '未命名表单'}
+        title={this.state.schema && this.state.schema.title ? this.state.schema.title : '未命名表单'}
         subTitle='采集的数据'/>
       {table}
     </div>;
+  }
+}
+
+function Cell(props) {
+  const {key, type, format, value} = props;
+  if (type === 'boolean') {
+    return <td key={key}>{value ? 'y' : 'n'}</td>;
+  } else if (format === 'data-url') {
+    if (value) {
+      var mediaTag = null;
+      var m = value.match(/name=([^;]+);/);
+      var filename = m ? m[1] : '';
+      if (value.startsWith('data:image'))
+        mediaTag = <img className='attachment' src={value}/>;
+      else if (value.startsWith('data:audio'))
+        mediaTag = <audio className='attachment' src={value} controls="controls"/>;
+      else if (value.startsWith('data:video'))
+        mediaTag = <video className='attachment' src={value} controls="controls"/>;
+      return <td key={key}>
+        {mediaTag}
+        <div>
+          <a href={value} download={filename}>{'[附件] ' + filename}</a>
+        </div>
+      </td>;
+    } else {
+      return <td key={key}></td>;
+    }
+  } else {
+    return <td key={key}>{value}</td>;
   }
 }
 
