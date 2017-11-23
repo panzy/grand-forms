@@ -15,21 +15,60 @@ var toast = {
   error: (msg) => alert(msg),
 };
 
+/** loading state constants. */
+const LOADING = 0;
+const LOADED = 1;
+const LOAD_FAILED = 2;
+
 /**
  * @prop {string} id form id
- * @prop {object} schema
- * @prop {object} uiSchema
  */
 class FormView extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      schema: JSON.stringify(this.props.schema, null, "  "),
-      uiSchema: JSON.stringify(this.props.uiSchema, null, "  ")
+      loading: LOADING,
+      schema: null, // object
+      uiSchema: null, // object
+      schemaJson: null, // JSON
+      uiSchemaJson: null, // JSON
     };
 
     this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  componentDidMount() {
+    if (window.location.search.indexOf('new=1') !== -1) {
+      this.setState({
+        schema: {},
+        uiSchema: {},
+        schemaJson: '{}',
+        uiSchemaJson: '{}',
+        loading: LOADED,
+      });
+    } else {
+      this.setState({loading: LOADING});
+      fetch('/api/forms/' + this.props.id).then(r => {
+        if (r.ok) {
+          return r.json().then(form => {
+            this.setState({
+              schema: form.schema,
+              uiSchema: form.uiSchema,
+              schemaJson: JSON.stringify(form.schema, null, "  "),
+              uiSchemaJson: JSON.stringify(form.uiSchema, null, "  "),
+              loading: LOADED,
+            });
+          });
+        } else {
+          return Promise.reject(new Error('加载表单数据失败：HTTP ' + r.status + ' ' + r.statusText));
+        }
+      }).catch(err => {
+        console.error(err);
+        alert(err.message);
+        this.setState({loading: LOAD_FAILED});
+      });
+    }
   }
 
   handleSubmit(event) {
@@ -51,26 +90,21 @@ class FormView extends Component {
   }
 
   render() {
-    var form = null;
+    var body = null;
 
-    try {
-      var schemaObj = JSON.parse(this.state.schema);
-      var uiSchemaObj = JSON.parse(this.state.uiSchema);
-      form = <Form
-        schema={schemaObj}
-        uiSchema={uiSchemaObj}
+    if (this.state.loading === LOADING) {
+      body = <div className='alert alert-info'>正在加载表单...</div>;
+    } else if (this.state.loading === LOAD_FAILED) {
+      body = <div className='alert alert-danger'>加载表单失败</div>;
+    } else if (this.state.loading === LOADED) {
+      body = <Form
+        schema={this.state.schema}
+        uiSchema={this.state.uiSchema}
         onSubmit={this.handleSubmit}/>;
-    } catch (err) {
-      form = <div className='alert alert-danger'>{err.message}</div>;
-    };
-
-    var l = window.location;
-    var editUrl = l.protocol + '//' + l.host + l.pathname.replace(/\/view/, '/edit') + l.search;
+    }
 
     return <div className='form-view'>
-
-      {form}
-
+      {body}
       <ToastContainer
         position="top-center"
         autoClose={5000}

@@ -10,50 +10,96 @@ import 'brace/theme/monokai';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
 
+import Navbar from './Navbar';
+
 // react-toastify 似乎不兼容 react@16.
 const toastStub = {
   success: (msg) => alert(msg),
   error: (msg) => alert(msg),
 };
 
+const LOADING = 0;
+const LOADED = 1;
+const LOAD_FAILED = 2;
+
 /**
- * @prop {string} fomrId
- * @prop {object} schema
- * @prop {object} uiSchema
- * @prop {object} [formData]
- * @prop {function} [onBackPressed]
- * @prop {function} [onResponsesPressed]
- * @prop {string} [backTitle] title for nav back button.
+ * @prop {string} id
  */
 class FormEditor extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      schema: JSON.stringify(this.props.schema, null, "  "),
-      uiSchema: JSON.stringify(this.props.uiSchema, null, "  ")
+      loading: LOADING,
+      schema: null, // object
+      uiSchema: null, // object
+      schemaJson: null, // JSON
+      uiSchemaJson: null, // JSON
+      formData: null,
     };
-    console.log('form schema', this.state.schema);
 
     this.handleSchemaChange = this.handleSchemaChange.bind(this);
     this.handleUiSchemaChange = this.handleUiSchemaChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
+  componentDidMount() {
+    if (window.location.search.indexOf('new=1') !== -1) {
+      this.setState({
+        schema: {},
+        uiSchema: {},
+        schemaJson: '{}',
+        uiSchemaJson: '{}',
+        loading: LOADED,
+      });
+    } else {
+      this.setState({loading: LOADING});
+      fetch('/api/forms/' + this.props.id).then(r => {
+        if (r.ok) {
+          return r.json().then(form => {
+            this.setState({
+              schema: form.schema,
+              uiSchema: form.uiSchema,
+              schemaJson: JSON.stringify(form.schema, null, "  "),
+              uiSchemaJson: JSON.stringify(form.uiSchema, null, "  "),
+              loading: LOADED,
+            });
+          });
+        } else {
+          return Promise.reject(new Error('加载表单数据失败：HTTP ' + r.status + ' ' + r.statusText));
+        }
+      }).catch(err => {
+        console.error(err);
+        alert(err.message);
+        this.setState({loading: LOAD_FAILED});
+      });
+    }
+  }
+
   handleSchemaChange(value, event) {
-    this.setState({schema: value});
+    var schema = this.state.schema;
+    try {
+      schema = JSON.parse(value);
+    } catch(err) {
+    }
+    this.setState({schema, schemaJson: value});
   }
 
   handleUiSchemaChange(value, event) {
-    this.setState({uiSchema: value});
+    var uiSchema = this.state.uiSchema;
+    try {
+      uiSchema = JSON.parse(value);
+    } catch(err) {
+    }
+    this.setState({uiSchema, uiSchemaJson: value});
   }
 
   handleSubmit(event) {
     var data = new FormData();
     console.log('form editor state', this.state);
-    data.append('schema', this.state.schema);
-    data.append('uiSchema', this.state.uiSchema);
-    fetch('/api/forms/' + this.props.formId, { method: 'PUT', body: data }).then(r => {
+    data.append('schema', this.state.schemaJson);
+    data.append('uiSchema', this.state.uiSchemaJson);
+    fetch('/api/forms/' + this.props.id, { method: 'PUT', body: data }).then(r => {
       if (r.ok) {
         toastStub.success('已保存');
       } else {
@@ -65,104 +111,109 @@ class FormEditor extends Component {
   }
 
   render() {
-    var preview = null;
 
-    try {
-      var schemaObj = JSON.parse(this.state.schema);
-      var uiSchemaObj = JSON.parse(this.state.uiSchema);
-      preview = <Form
-        schema={schemaObj}
-        uiSchema={uiSchemaObj}
-        formData={this.props.formData}/>;
-    } catch (err) {
-      preview = <div className='alert alert-danger'>error</div>;
-    };
+    var navbar, body;
 
-    var l = window.location;
-    var viewUrl = '/forms/' + this.props.formId;
+    if (this.state.loading === LOADING) {
+      navbar = <Navbar/>;
+      body = <div className='alert alert-info'>正在加载表单...</div>;
+    } else if (this.state.loading === LOAD_FAILED) {
+      navbar = <Navbar/>;
+      body = <div className='alert alert-danger'>加载表单失败</div>;
+    } else if (this.state.loading === LOADED) {
 
-    return <div className='form-editor'>
-      {/* nav bar */}
-      <div className='navbar navbar-default'>
-        <div className="container-fluid">
-          <div className="navbar-header">
-            <span className="navbar-brand">
-              <a className="back glyphicon glyphicon-arrow-left" href="#" title={this.props.backTitle || "返回"}
-                onClick={this.props.onBackPressed}></a>
-              {this.props.schema.title || '未命名表单'}
-            </span>
+      var viewUrl = '/forms/' + this.props.id + '/view';
+      var respUrl = '/forms/' + this.props.id + '/resp';
+
+      navbar = (
+        <Navbar
+          title={this.state.schema && this.state.schema.title ? this.state.schema.title : '未命名表单'}
+          backUrl='/'
+          backTitle='所有表单'
+          actions={[
+            <button key='save' type="button" className="btn btn-success navbar-btn" onClick={this.handleSubmit}>保存</button>,
+            <span key='sep1'>&nbsp;</span>,
+            <a key='view' href={viewUrl} target='_blank' className="btn btn-default navbar-btn">使用表单</a>,
+            <span key='sep2'>&nbsp;</span>,
+            <a key='resp' href={respUrl} target='_blank' className="btn btn-default navbar-btn">查看数据</a>,
+          ]}
+        />
+      );
+
+      var preview = <Form
+        schema={this.state.schema || {}}
+        uiSchema={this.state.uiSchema || {}}
+        formData={this.state.formData}/>;
+
+      body = <div className='form-editor'>
+        {/* schema editor, ui schema editor, preview */}
+        <div>
+          <div className='col-sm-9'>
+            <form onSubmit={this.handleSubmit}>
+              <div className='col-sm-7'>
+                <h2>Schema</h2>
+                <AceEditor
+                  name='schema'
+                  width='100%'
+                  mode="json"
+                  theme="monokai"
+                  onChange={this.handleSchemaChange}
+                  fontSize={14}
+                  showPrintMargin={false}
+                  showGutter={true}
+                  highlightActiveLine={false}
+                  value={this.state.schemaJson}
+                  editorProps={{$blockScrolling: true}}
+                  setOptions={{
+                    showLineNumbers: true,
+                      tabSize: 2,
+                  }}/>
+              </div>
+              <div className='col-sm-5'>
+
+                <h2>UI Schema</h2>
+                <AceEditor
+                  name='uiSchema'
+                  width='100%'
+                  mode="json"
+                  theme="monokai"
+                  onChange={this.handleUiSchemaChange}
+                  fontSize={14}
+                  showPrintMargin={false}
+                  showGutter={true}
+                  highlightActiveLine={false}
+                  value={this.state.uiSchemaJson}
+                  editorProps={{$blockScrolling: true}}
+                  setOptions={{
+                    showLineNumbers: true,
+                      tabSize: 2,
+                  }}/>
+              </div>
+            </form>
           </div>
-          <div className="navbar-right">
-            <button type="button" className="btn btn-success navbar-btn" onClick={this.handleSubmit}>保存</button>
-            &nbsp;
-            <a href={viewUrl} target='_blank' className="btn btn-default navbar-btn">使用表单</a>
-            &nbsp;
-            <button type="button" className="btn btn-default navbar-btn" onClick={this.props.onResponsesPressed}>查看数据</button>
+          <div className='col-sm-3'>
+            <h2>预览</h2>
+            {preview}
           </div>
         </div>
+
+        <ToastContainer
+          position="top-center"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          pauseOnHover
+        />
+      </div>;
+    }
+
+    return (
+      <div> 
+        {navbar}
+        {body}
       </div>
-
-      {/* schema editor, ui schema editor, preview */}
-      <div>
-        <div className='col-sm-9'>
-          <form onSubmit={this.handleSubmit}>
-            <div className='col-sm-7'>
-              <h2>Schema</h2>
-              <AceEditor
-                name='schema'
-                width='100%'
-                mode="json"
-                theme="monokai"
-                onChange={this.handleSchemaChange}
-                fontSize={14}
-                showPrintMargin={false}
-                showGutter={true}
-                highlightActiveLine={false}
-                value={this.state.schema}
-                editorProps={{$blockScrolling: true}}
-                setOptions={{
-                  showLineNumbers: true,
-                    tabSize: 2,
-                }}/>
-            </div>
-            <div className='col-sm-5'>
-
-              <h2>UI Schema</h2>
-              <AceEditor
-                name='uiSchema'
-                width='100%'
-                mode="json"
-                theme="monokai"
-                onChange={this.handleUiSchemaChange}
-                fontSize={14}
-                showPrintMargin={false}
-                showGutter={true}
-                highlightActiveLine={false}
-                value={this.state.uiSchema}
-                editorProps={{$blockScrolling: true}}
-                setOptions={{
-                  showLineNumbers: true,
-                    tabSize: 2,
-                }}/>
-            </div>
-          </form>
-        </div>
-        <div className='col-sm-3'>
-          <h2>预览</h2>
-          {preview}
-        </div>
-      </div>
-
-      <p> ToastContainer </p>
-      <ToastContainer
-        position="top-center"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        pauseOnHover
-      />
-    </div>;
+    );
   }
 }
 

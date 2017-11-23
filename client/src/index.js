@@ -6,7 +6,7 @@ import FormResponses from './FormResponses';
 import FormView from './FormView';
 import registerServiceWorker from './registerServiceWorker';
 
-var m = window.location.pathname.match(/^\/forms\/(\w+)(?:\/(view|resp))?/);
+var m = null;//window.location.pathname.match(/^\/forms\/(\w+)(?:\/(view|resp))?/);
 if (m) {
   var formId = m[1];
   var action = m[2] || 'view';

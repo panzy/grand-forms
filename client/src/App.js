@@ -1,10 +1,17 @@
 import React, { Component } from 'react';
+import {
+  BrowserRouter as Router,
+  Route,
+  Link
+} from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import uuidv4 from 'uuid/v4';
 
 import logo from './logo.svg';
 import FormEditor from './FormEditor';
 import FormResponses from './FormResponses';
+import FormView from './FormView';
+import Navbar from './Navbar';
 import sampleFormData from './sampleFormData.json';
 import sampleFormSchema from './sampleFormSchema.json';
 import sampleFormUiSchema from './sampleFormUiSchema.json';
@@ -26,35 +33,10 @@ class App extends Component {
       forms: []
     };
 
-    this.onCreateForm = () => {
-      this.setState({
-        mode: 'form-editor',
-        currentFormId: uuidv4(),
-        currentFormSchema: sampleFormSchema,
-        currentFormUiSchema: sampleFormUiSchema,
-        currentFormData: sampleFormData,
-      });
-    };
-
-    this.openFormHandler = (id) => () => {
-      fetch('/api/forms/' + id).then(r => {
-        if (r.ok) {
-          return r.json().then(form => {
-            this.setState({
-              mode: 'form-editor',
-              currentFormId: id,
-              currentFormSchema: form.schema,
-              currentFormUiSchema: form.uiSchema
-            });
-          });
-        } else {
-          return Promise.reject(new Error('加载表单数据失败：HTTP ' + r.status + ' ' + r.statusText));
-        }
-      }).catch(err => {
-        alert(err.message);
-      });
-    };
-
+    this.renderFormIndex = this.renderFormIndex.bind(this);
+    this.renderFormEditor = this.renderFormEditor.bind(this);
+    this.renderFormResponses = this.renderFormResponses.bind(this);
+    this.renderFormView = this.renderFormView.bind(this);
     this.switchToFormResponsesMode = () => { this.setState({mode: 'form-resp'}); }
     this.switchToFormEditorMode = () => { this.setState({mode: 'form-editor'}); }
     this.switchToFormsIndexMode = () => { this.setState({mode: 'form-index'}); }
@@ -74,47 +56,31 @@ class App extends Component {
     });
   }
 
-  render() {
-    if (this.state.mode === 'form-editor') {
-      return this.renderFormEditor();
-    } else if (this.state.mode === 'form-resp') {
-      return this.renderFormResponses();
-    } else {
-      return this.renderFormIndex();
-    }
+  onCreateForm() {
+    window.location = '/forms/' + uuidv4() + '?new=1';
   }
 
-  renderFormEditor() {
-    return (
-      <FormEditor
-        formId={this.state.currentFormId}
-        schema={this.state.currentFormSchema || {}}
-        uiSchema={this.state.currentFormUiSchema || {}}
-        formData={this.state.currentFormData || {}}
-        backTitle='所有表单'
-        onBackPressed={this.switchToFormsIndexMode}
-        onResponsesPressed={this.switchToFormResponsesMode}
-      />
-    );
+  render() {
+    return <Router>
+      <div>
+        <Route exact path="/" component={this.renderFormIndex}/>
+        <Route exact path="/forms/:id" component={this.renderFormEditor}/>
+        <Route path="/forms/:id/view" component={this.renderFormView}/>
+        <Route path="/forms/:id/resp" component={this.renderFormResponses}/>
+      </div>
+    </Router>
+  }
+
+  renderFormEditor({match}) {
+    return <FormEditor id={match.params.id}/>;
   }
 
   renderFormIndex() {
     return (
       <div>
-        {/* nav bar */}
-        <div className='navbar navbar-default'>
-          <div className="container-fluid">
-            <div className="navbar-header">
-              <span className="navbar-brand">
-                <img alt='logo' src='/favicon.ico'/>
-                Grand Forms
-              </span>
-            </div>
-            <div className="navbar-right">
-              <button type='button' className='btn btn-success navbar-btn' onClick={this.onCreateForm}>创建表单</button>
-            </div>
-          </div>
-        </div>
+        <Navbar
+          actions={<button type='button' className='btn btn-success navbar-btn' onClick={this.onCreateForm}>创建表单</button>}
+        />
 
         <div className='col-sm-12'>
           <h2>所有表单</h2>
@@ -122,7 +88,7 @@ class App extends Component {
             {
               this.state.forms.map(f =>
                 <li key={f.id}>
-                  <a className='edit' href='#' onClick={this.openFormHandler(f.id)}>{f.title}</a>
+                  <a className='edit' href={'/forms/' + f.id}>{f.title}</a>
                 </li>
               )
             }
@@ -142,20 +108,17 @@ class App extends Component {
     );
   }
 
-  renderFormResponses() {
+  renderFormResponses({match}) {
     return <FormResponses
-      formId={this.state.currentFormId}
+      id={match.params.id}
       title={this.state.currentFormSchema ? this.state.currentFormSchema.title : undefined}
       backTitle='编辑表单'
       onBackPressed={this.switchToFormEditorMode}
     />;
   }
 
-  switchToFormResponsesMode
-  switchToFormResponsesMode() {
-  }
-
-  switchToFormsIndexMode() {
+  renderFormView({match}) {
+    return <FormView id={match.params.id} />;
   }
 }
 

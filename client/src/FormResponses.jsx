@@ -1,11 +1,13 @@
 import React, { Component } from "react";
 
+import Navbar from './Navbar';
+
 const LOADING = 0;
 const LOADED = 1;
 const LOAD_FAILED = 2;
 
 /**
- * @prop {string} formId
+ * @prop {string} id
  * @prop {string} [title]
  * @prop {string} [backTitle] title for nav back button.
  * @prop {object} items
@@ -23,7 +25,7 @@ class FormResponses extends Component {
 
   componentDidMount() {
     this.setState({loading: LOADING});
-    fetch('/api/forms/' + this.props.formId + '/resp').then(r => {
+    fetch('/api/forms/' + this.props.id + '/resp').then(r => {
       if (r.ok) {
         r.json().then(data => {
           data.loading = LOADED;
@@ -89,19 +91,9 @@ class FormResponses extends Component {
       </table>;
     }
     return <div className='form-responses'>
-      {/* nav bar */}
-      <div className='navbar navbar-default'>
-        <div className="container-fluid">
-          <div className="navbar-header">
-            <span className="navbar-brand">
-              <a className="back glyphicon glyphicon-arrow-left" href="#" title={this.props.backTitle || "返回"}
-                onClick={this.props.onBackPressed}></a>
-              {this.props.title || '未命名表单'}
-              <small> 采集的数据</small>
-            </span>
-          </div>
-        </div>
-      </div>
+      <Navbar
+        title={this.props.title || '未命名表单'}
+        subTitle='采集的数据'/>
       {table}
     </div>;
   }
