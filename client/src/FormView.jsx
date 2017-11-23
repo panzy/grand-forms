@@ -9,6 +9,11 @@ import 'brace/theme/monokai';
 
 import { ToastContainer, toast } from 'react-toastify';
 
+/**
+ * @prop {string} id form id
+ * @prop {object} schema
+ * @prop {object} uiSchema
+ */
 class FormView extends Component {
   constructor(props) {
     super(props);
@@ -22,7 +27,8 @@ class FormView extends Component {
   }
 
   handleSubmit(event) {
-    fetch(window.location.href, {
+    var url = '/api/forms/' + this.props.id;
+    fetch(url, {
       method: 'POST',
       headers: new Headers({
         "Content-Type": "application/json",

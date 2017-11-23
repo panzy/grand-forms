@@ -30,6 +30,7 @@ if (m) {
         return r.json().then(form => {
           ReactDOM.render((
             <FormView
+              id={formId}
               schema={form.schema || {}}
               uiSchema={form.uiSchema || {}}
             />

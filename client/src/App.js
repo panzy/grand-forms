@@ -5,7 +5,6 @@ import uuidv4 from 'uuid/v4';
 import logo from './logo.svg';
 import FormEditor from './FormEditor';
 import FormResponses from './FormResponses';
-import FormView from './FormView';
 import sampleFormData from './sampleFormData.json';
 import sampleFormSchema from './sampleFormSchema.json';
 import sampleFormUiSchema from './sampleFormUiSchema.json';
