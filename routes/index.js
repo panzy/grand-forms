@@ -108,6 +108,21 @@ function handleFormPut(req, res) {
   });
 }
 
+/**
+ * 获取表单收集的数据。
+ *
+ * 应答格式：JSON
+ *
+ * 应答数据结构： {
+ *   meta: {
+ *    time: $unix_time_in_seconds
+ *   },
+ *   schema,
+ *   items: []
+ * }
+ *
+ * 其中 items 数组中的元素就是每次 POST 上来的 JSON 对象。
+ */
 function handleFormRespReq(req, res) {
   var schemaFilename = path.join(dataDir, 'forms', req.params.id +  '.json');
   var readingSchema = readFile(schemaFilename).then(buf => {
@@ -130,7 +145,9 @@ function handleFormRespReq(req, res) {
         .filter((name, idx) => idx > files.length - 100 /* XXX 只显示最近 100 条 */
           && /^[0-9a-zA-Z-_]+\.json$/.test(name))
         .map(name => readFile(path.join(respDir, name)).then(buf => {
-          return JSON.parse(buf.toString());
+          var data = JSON.parse(buf.toString());
+          data.meta = {time: name.substr(0, 10)};
+          return data;
         }));
 
       return Promise.all(readingResps).then(items => {

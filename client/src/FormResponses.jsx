@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import moment from 'moment';
 
 import Navbar from './Navbar';
 
@@ -46,17 +47,22 @@ class FormResponses extends Component {
       table = <div className='alert alert-danger'>加载数据失败</div>;
     } else if (this.state.loading === LOADED) {
       switch (this.state.schema.type) {
-        case 'object':
-          var tableHeaders = Object.entries(this.state.schema.properties).map(kv =>
-            <th key={kv[0]}>{kv[1].title}</th>);
+        case 'object': {
+          var tableHeaders = Array.prototype.concat.call([],
+            <th key='__ts'>Time</th>,
+            Object.entries(this.state.schema.properties).map(kv =>
+              <th key={kv[0]}>{kv[1].title}</th>));
           var tableRows = this.state.items.map((row, rowId) => {
             var cells = Object.entries(this.state.schema.properties).map(kv => {
               const [key, {type, format}] = kv;
-              return <Cell value={row[key]} type={type} format={format}/>;
+              return <Cell key={key} value={row[key]} type={type} format={format}/>;
             });
-            return <tr key={rowId}>{cells}</tr>;
+            return <tr key={rowId}>
+              <td>{row.meta && row.meta.time ? moment(row.meta.time * 1000).format('YYYY-MM-DD HH:mm:ss') : '-'}</td>
+              {cells}
+            </tr>;
           });
-          table = <table className='table responses'>
+          table = <table className='table table-bordered responses'>
             <thead>
               <tr>{tableHeaders}</tr>
             </thead>
@@ -65,7 +71,8 @@ class FormResponses extends Component {
             </tbody>
           </table>;
           break;
-        case 'string':
+        }
+        case 'string': {
           var tableRows = this.state.items.map((value, rowId) => <tr key={rowId}><Cell value={value} type='string'/></tr>);
           table = <table className='table responses'>
             <thead>
@@ -76,6 +83,7 @@ class FormResponses extends Component {
             </tbody>
           </table>;
           break;
+        }
         default:
           table = <pre>{JSON.stringify(this.state.items, null, "  ")}</pre>;
           break;
@@ -91,9 +99,9 @@ class FormResponses extends Component {
 }
 
 function Cell(props) {
-  const {key, type, format, value} = props;
+  const {type, format, value} = props;
   if (type === 'boolean') {
-    return <td key={key}>{value ? 'y' : 'n'}</td>;
+    return <td>{value ? 'y' : 'n'}</td>;
   } else if (format === 'data-url') {
     if (value) {
       var mediaTag = null;
@@ -105,17 +113,17 @@ function Cell(props) {
         mediaTag = <audio className='attachment' src={value} controls="controls"/>;
       else if (value.startsWith('data:video'))
         mediaTag = <video className='attachment' src={value} controls="controls"/>;
-      return <td key={key}>
+      return <td>
         {mediaTag}
         <div>
           <a href={value} download={filename}>{'[附件] ' + filename}</a>
         </div>
       </td>;
     } else {
-      return <td key={key}></td>;
+      return <td></td>;
     }
   } else {
-    return <td key={key}>{value}</td>;
+    return <td>{value}</td>;
   }
 }
 
