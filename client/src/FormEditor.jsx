@@ -2,6 +2,11 @@ import React, { Component } from "react";
 import AceEditor from 'react-ace';
 import Form from "react-jsonschema-form";
 
+// tabs
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css';
+
+
 // AceEditor themes
 import brace from 'brace';
 import 'brace/mode/json';
@@ -10,6 +15,7 @@ import 'brace/theme/monokai';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
 
+import FormDestination from './FormDestination';
 import Navbar from './Navbar';
 
 // react-toastify 似乎不兼容 react@16.
@@ -36,6 +42,7 @@ class FormEditor extends Component {
       schemaJson: null, // JSON
       uiSchemaJson: null, // JSON
       formData: null,
+      destination: null, // object
     };
 
     this.handleSchemaChange = this.handleSchemaChange.bind(this);
@@ -61,6 +68,7 @@ class FormEditor extends Component {
             this.setState({
               schema: form.schema,
               uiSchema: form.uiSchema,
+              destination: form.destination || {type: 'default'},
               schemaJson: JSON.stringify(form.schema, null, "  "),
               uiSchemaJson: JSON.stringify(form.uiSchema, null, "  "),
               loading: LOADED,
@@ -108,9 +116,9 @@ class FormEditor extends Component {
 
   handleSubmit(event) {
     var data = new FormData();
-    console.log('form editor state', this.state);
     data.append('schema', this.state.schemaJson);
     data.append('uiSchema', this.state.uiSchemaJson);
+    data.append('destination', JSON.stringify(this.state.destination));
     fetch('/api/forms/' + this.props.id, { method: 'PUT', body: data }).then(r => {
       if (r.ok) {
         toastStub.success('已保存');
@@ -154,15 +162,16 @@ class FormEditor extends Component {
       var preview = <Form
         schema={this.state.schema || {}}
         uiSchema={this.state.uiSchema || {}}
-        formData={this.state.formData}/>;
+        formData={this.state.formData}
+        children={<span/>/* no default submit buttons */}
+      />;
 
-      body = <div className='form-editor'>
-        {/* schema editor, ui schema editor, preview */}
+      var editor = (
         <div>
           <div className='col-sm-9'>
             <form onSubmit={this.handleSubmit}>
               <div className='col-sm-7'>
-                <h2>Schema</h2>
+                <div className='form-editor-module-title'>Schema</div>
                 <AceEditor
                   name='schema'
                   width='100%'
@@ -182,7 +191,7 @@ class FormEditor extends Component {
               </div>
               <div className='col-sm-5'>
 
-                <h2>UI Schema</h2>
+                <div className='form-editor-module-title'>UI Schema</div>
                 <AceEditor
                   name='uiSchema'
                   width='100%'
@@ -202,21 +211,38 @@ class FormEditor extends Component {
               </div>
             </form>
           </div>
-          <div className='col-sm-3'>
-            <h2>预览</h2>
+          <div className='col-sm-3 form-preview'>
+            <div className='form-editor-module-title'>预览</div>
             {preview}
           </div>
         </div>
+      );
 
-        <ToastContainer
-          position="top-center"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          pauseOnHover
-        />
-      </div>;
+      body = (
+        <div className='form-editor'>
+          <Tabs>
+            <TabList>
+              <Tab>设计表单</Tab>
+              <Tab>数据去向</Tab>
+            </TabList>
+
+            <TabPanel>
+              {editor}
+            </TabPanel>
+            <TabPanel>
+              <FormDestination data={this.state.destination}/>
+            </TabPanel>
+          </Tabs>
+          <ToastContainer
+            position="top-center"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            pauseOnHover
+          />
+        </div>
+      );
     }
 
     return (

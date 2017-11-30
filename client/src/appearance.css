@@ -6,6 +6,7 @@ body {
   background-color: rgb(231,238,247);
   background-image: url('//ssl.gstatic.com/docs/forms/themes/images/v1/0AX42CRMsmRFbUy03NTAzM2Q4My03ODU1LTQ2NzItODI2YS1kZmU5YzdiMzZjOGQ/blue-stripe-bg.png');
   background-repeat: repeat;
+  overflow-y: scroll;
 }
 
 /*****************************************************************************/
@@ -70,4 +71,19 @@ ul.forms a.view {
 .form-view {
   background-color: white;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+/* form editor tabs */
+.react-tabs__tab-list {
+  text-align: center;
+}
+.react-tabs__tab {
+  font-size: 1.2em;
+  color: gray;
+  border: none;
+}
+.react-tabs__tab--selected {
+  background: none;
+  border-bottom: 3px solid #673ab7;
+  color: #673ab7;
 }

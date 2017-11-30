@@ -16,7 +16,9 @@
   "proxy": "http://localhost:3001",
   "devDependencies": {
     "moment": "^2.19.2",
+    "react-bootstrap": "^0.31.5",
     "react-jsonschema-form": "file:///home/panzy/workspace/react-jsonschema-form",
+    "react-tabs": "^2.1.1",
     "react-toastify": "^2.2.1"
   }
 }

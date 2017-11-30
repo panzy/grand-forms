@@ -104,6 +104,15 @@ function handleFormPut(req, res) {
         }
       });
     }
+    if (fields.destination) {
+      var filename = dataDir + 'forms/' + req.params.id + '.dest.json';
+      var data = fields.destination[0];
+      fs.writeFile(filename, data, (err) => {
+        if (err) {
+          logger.error(err);
+        }
+      });
+    }
     res.send('ok');
   });
 }
@@ -222,29 +231,39 @@ function handleFormPost(req, res) {
   if (req.headers['content-type'] !== 'application/json') {
     res.status(400).send('invalid content-type, expect application/json, actual ' + req.headers['content-type'] + '.');
   } else {
-    getRawBody(req, {
-      length: req.headers['content-length'],
-      limit: '20mb'
-    }).then(buf => {
-      logger.debug('post form data:', buf);
-      var outputDir = path.join(dataDir, 'responses', req.params.id);
-      var filename = new Date().getTime() + '_' + uuidv4().substr(0, 4) + '.json';
-      var outputPath = path.join(outputDir, filename);
-      mkdirp(outputDir, err => {
-        if (err) {
-          logger.error(err);
-          res.status(500).send(err.message);
-        } else {
-          fs.writeFile(outputPath, buf, (err) => {
-            if (err) {
-              logger.error(err);
-              res.status(500).send(err.message);
+    readFormDestination(req.params.id).then(destConf => {
+      return getRawBody(req, {
+        length: req.headers['content-length'],
+        limit: '20mb'
+      }).then(buf => {
+        logger.debug('post form data:', buf);
+
+        if (!destConf || destConf.type === 'default') {
+          var outputDir = path.join(dataDir, 'responses', req.params.id);
+          var filename = new Date().getTime() + '_' + uuidv4().substr(0, 4) + '.json';
+          var outputPath = path.join(outputDir, filename);
+          return mkdirpPromise(outputDir).then(() => writeFile(outputPath, buf));
+        } else if (destConf.type === 'web') {
+          logger.debug('submit to web API', destConf.url);
+          return fetch(destConf.url, {
+            method: 'POST',
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: buf
+          }).then(r => {
+            if (r.ok) {
+              return r.status;
             } else {
-              res.send(`已保存，共 ${req.headers['content-length']} 字节。`);
+              throw new Error('Web API 应答： ' + r.status + ' ' + r.statusText);
             }
           });
+        } else {
+          throw new Error(`destination type of "${destConf.type}" is not implemented.`);
         }
       });
+    }).then(() => {
+      res.status(204).end();
     }).catch(err => {
       logger.error(err);
       res.status(500).end(err.message)
@@ -263,10 +282,23 @@ function handleFormGet(req, res) {
 
   var schemaFilename = dataDir + `/forms/${req.params.id}.json`;
   var uiSchemaFilename = dataDir + `/forms/${req.params.id}.ui.json`;
+  var destFilename = dataDir + `/forms/${req.params.id}.dest.json`;
 
   readFile(schemaFilename).then(schemaBuf => {
     var schema = JSON.parse(schemaBuf.toString());
     var title = schema.title;
+    Promise.all([
+      readFile(uiSchemaFilename),
+      readFile(destFilename),
+    ]).then(bufs => {
+      var uiSchema = JSON.parse(bufs[0].toString());
+      var destination = JSON.parse(bufs[1].toString());
+      res.send({schema, uiSchema, destination});
+    }).catch(err => {
+      // UI schema is optional
+      res.send({schema});
+    });
+
     return readFile(uiSchemaFilename).then(uiSchemaBuf => {
       var uiSchema = JSON.parse(uiSchemaBuf.toString());
       res.send({schema, uiSchema});
@@ -284,5 +316,47 @@ function handleFormGet(req, res) {
   });
 }
 
+/**
+ * call mkdirp() and return a Promise.
+ */
+function mkdirpPromise(dir) {
+  return new Promise((resolve, reject) => {
+    mkdirp(dir, err => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(dir);
+      }
+    });
+  });
+}
+
+/**
+ * read form destination configuration.
+ *
+ * @arg {string} id form id
+ * @return {object} or null.
+ */
+function readFormDestination(id) {
+  var filename = dataDir + `/forms/${id}.dest.json`;
+  return readFile(filename).then(buf => JSON.parse(buf.toString()));
+}
+
+/**
+ * Call fs.writeFile and return a Promise.
+ *
+ * @return {Promise}
+ */
+function writeFile(outputPath, buf) {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(outputPath, buf, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
 
 module.exports = router;
