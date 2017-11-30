@@ -21,15 +21,7 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    /**
-     * mode enums
-     * ==========
-     * - form-index: list all forms
-     * - form-editor: edit a form
-     * - form-resp: view form responses
-     */
     this.state = {
-      mode: 'form-index',
       forms: []
     };
 
@@ -39,7 +31,6 @@ class App extends Component {
     this.renderFormView = this.renderFormView.bind(this);
     this.switchToFormResponsesMode = () => { this.setState({mode: 'form-resp'}); }
     this.switchToFormEditorMode = () => { this.setState({mode: 'form-editor'}); }
-    this.switchToFormsIndexMode = () => { this.setState({mode: 'form-index'}); }
   }
 
   componentDidMount() {
@@ -113,12 +104,7 @@ class App extends Component {
   }
 
   renderFormResponses({match}) {
-    return <FormResponses
-      id={match.params.id}
-      title={this.state.currentFormSchema ? this.state.currentFormSchema.title : undefined}
-      backTitle='编辑表单'
-      onBackPressed={this.switchToFormEditorMode}
-    />;
+    return <FormResponses id={match.params.id}/>;
   }
 
   renderFormView({match}) {
