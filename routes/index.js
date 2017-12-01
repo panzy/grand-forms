@@ -1,5 +1,6 @@
 const express = require('express');
 const fetch = require('node-fetch')
+const FormData = require('form-data');
 const fs = require('fs');
 const getRawBody = require('raw-body');
 const mkdirp = require('mkdirp');
@@ -245,12 +246,29 @@ function handleFormPost(req, res) {
           return mkdirpPromise(outputDir).then(() => writeFile(outputPath, buf));
         } else if (destConf.type === 'web') {
           logger.debug('submit to web API', destConf.url);
+          var body;
+          var contentType = destConf['contentType'];
+          if (contentType === 'application/json') {
+            body = buf;
+          } else if (contentType === 'application/x-www-form-urlencoded') {
+            var obj = JSON.parse(buf.toString());
+            body = Object.entries(obj).map(arr =>
+              encodeURIComponent(arr[0]) + '=' + encodeURIComponent(arr[1])).join('&');
+          } else if (contentType === 'multipart/form-data') {
+            var obj = JSON.parse(buf.toString());
+            body = new FormData();
+            Object.entries(obj).forEach(arr => {
+              body.append(arr[0], arr[1].toString());
+            });
+          } else {
+            throw new Error(`destination type of web with content type ${contentType} is not implemented`);
+          }
           return fetch(destConf.url, {
             method: 'POST',
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type": contentType,
             },
-            body: buf
+            body
           }).then(r => {
             if (r.ok) {
               return r.status;

@@ -46,6 +46,12 @@ class FormDestination extends Component {
           "type": "string",
           "title": "URL",
           "default": "http://192.168.1.90/api/submit"
+        },
+        "contentType": {
+          "type": "string",
+          "title": "Content Type",
+          "enum": [ "application/json", "application/x-www-form-urlencoded", "multipart/form-data" ],
+          "default": "application/json"
         }
       }
     };

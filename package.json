@@ -13,6 +13,7 @@
     "express": "^4.13.4",
     "express-minify": "^0.2.0",
     "express-session": "^1.14.2",
+    "form-data": "^2.3.1",
     "fs": "0.0.1-security",
     "fs-readfile-promise": "^3.0.0",
     "logger": "git+https://github.com/panzy/node-logger.git",
