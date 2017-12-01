@@ -98,8 +98,8 @@ class FormView extends Component {
       body = <div className='alert alert-danger'>加载表单失败</div>;
     } else if (this.state.loading === LOADED) {
       body = <Form
-        schema={this.state.schema}
-        uiSchema={this.state.uiSchema}
+        schema={this.state.schema || {}}
+        uiSchema={this.state.uiSchema || {}}
         onSubmit={this.handleSubmit}/>;
     }
 

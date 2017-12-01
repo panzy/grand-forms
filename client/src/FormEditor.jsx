@@ -116,9 +116,9 @@ class FormEditor extends Component {
 
   handleSubmit(event) {
     var data = new FormData();
-    data.append('schema', this.state.schemaJson);
-    data.append('uiSchema', this.state.uiSchemaJson);
-    data.append('destination', JSON.stringify(this.state.destination));
+    data.append('schema', this.state.schemaJson || 'null');
+    data.append('uiSchema', this.state.uiSchemaJson || 'null');
+    data.append('destination', JSON.stringify(this.state.destination || null));
     fetch('/api/forms/' + this.props.id, { method: 'PUT', body: data }).then(r => {
       if (r.ok) {
         toastStub.success('已保存');
