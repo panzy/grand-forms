@@ -232,22 +232,22 @@ function handleFormPost(req, res) {
   if (req.headers['content-type'] !== 'application/json') {
     res.status(400).send('invalid content-type, expect application/json, actual ' + req.headers['content-type'] + '.');
   } else {
-    readFormDestination(req.params.id).then(destConf => {
+    readFormDestination(req.params.id, null).then(destination => {
       return getRawBody(req, {
         length: req.headers['content-length'],
         limit: '20mb'
       }).then(buf => {
         logger.debug('post form data:', buf);
 
-        if (!destConf || destConf.type === 'default') {
+        if (!destination || destination.type === 'default') {
           var outputDir = path.join(dataDir, 'responses', req.params.id);
           var filename = new Date().getTime() + '_' + uuidv4().substr(0, 4) + '.json';
           var outputPath = path.join(outputDir, filename);
           return mkdirpPromise(outputDir).then(() => writeFile(outputPath, buf));
-        } else if (destConf.type === 'web') {
-          logger.debug('submit to web API', destConf.url);
+        } else if (destination.type === 'web') {
+          logger.debug('submit to web API', destination.url);
           var body;
-          var contentType = destConf['contentType'];
+          var contentType = destination['contentType'];
           if (contentType === 'application/json') {
             body = buf;
           } else if (contentType === 'application/x-www-form-urlencoded') {
@@ -263,7 +263,7 @@ function handleFormPost(req, res) {
           } else {
             throw new Error(`destination type of web with content type ${contentType} is not implemented`);
           }
-          return fetch(destConf.url, {
+          return fetch(destination.url, {
             method: 'POST',
             headers: {
               "Content-Type": contentType,
@@ -276,8 +276,30 @@ function handleFormPost(req, res) {
               throw new Error('Web API 应答： ' + r.status + ' ' + r.statusText);
             }
           });
+        } else if (destination.type === 'db') {
+          var data = JSON.parse(buf.toString());
+          return readFormSchema(req.params.id).then(schema => {
+            var grandFormsIoUrl = 'http://localhost:3002/api/submit';
+            return fetch(grandFormsIoUrl, {
+              method: 'POST',
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                schema,
+                destination,
+                data
+              })
+            }).then(r => {
+              if (r.ok) {
+                return r.status;
+              } else {
+                throw new Error('Web API 应答： ' + r.status + ' ' + r.statusText);
+              }
+            });
+          });
         } else {
-          throw new Error(`destination type of "${destConf.type}" is not implemented.`);
+          throw new Error(`destination type of "${destination.type}" is not implemented.`);
         }
       });
     }).then(() => {
@@ -353,10 +375,27 @@ function mkdirpPromise(dir) {
  * read form destination configuration.
  *
  * @arg {string} id form id
+ * @arg {object} [defaultValue]
  * @return {object} or null.
  */
-function readFormDestination(id) {
+function readFormDestination(id, defaultValue) {
   var filename = dataDir + `/forms/${id}.dest.json`;
+  return readFile(filename)
+    .then(buf => JSON.parse(buf.toString()))
+    .catch(err => {
+      if (err.code === 'ENOENT' && typeof defaultValue !== 'undefined')
+        return defaultValue;
+    });
+}
+
+/**
+ * read form schema.
+ *
+ * @arg {string} id form id
+ * @return {object} or null.
+ */
+function readFormSchema(id) {
+  var filename = dataDir + `/forms/${id}.json`;
   return readFile(filename).then(buf => JSON.parse(buf.toString()));
 }
 
