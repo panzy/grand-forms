@@ -35,6 +35,21 @@ router.get('/api/forms/:id/resp', handleFormRespReq);
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Make a rejected Promise from a failed Fetch Response.
+ *
+ * @arg {Response} r
+ * @return {Promise} always rejects with an Error object.
+ */
+function errorMessageOfResponse(r) {
+  var statusMessage = 'HTTP ' + r.status + ' ' + r.statusText;
+
+  if (/^text\/html;/.test(r.headers.get('content-type'))) {
+    return Promise.reject(new Error(statusMessage));
+  }
+  return r.text().then(message => Promise.reject(new Error(statusMessage + (message ? ': ' + message : ''))));
+}
+
+/**
  * list forms.
  */
 function handleFormIndexReq(req, res) {
@@ -229,6 +244,7 @@ function handleFormDelete(req, res) {
  */
 function handleFormPost(req, res) {
   // 用户提交了表单
+  res.setHeader('content-type', 'text/plain');
   if (req.headers['content-type'] !== 'application/json') {
     res.status(400).send('invalid content-type, expect application/json, actual ' + req.headers['content-type'] + '.');
   } else {
@@ -273,7 +289,7 @@ function handleFormPost(req, res) {
             if (r.ok) {
               return r.status;
             } else {
-              throw new Error('Web API 应答： ' + r.status + ' ' + r.statusText);
+              return errorMessageOfResponse(r);
             }
           });
         } else if (destination.type === 'db') {
@@ -294,7 +310,7 @@ function handleFormPost(req, res) {
               if (r.ok) {
                 return r.status;
               } else {
-                throw new Error('Web API 应答： ' + r.status + ' ' + r.statusText);
+                return errorMessageOfResponse(r);
               }
             });
           });
@@ -306,7 +322,7 @@ function handleFormPost(req, res) {
       res.status(204).end();
     }).catch(err => {
       logger.error(err);
-      res.status(500).end(err.message)
+      res.status(500).end((err.name ? err.name + ': ' : '') + err.message)
     });
   }
 }
