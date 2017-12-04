@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import ReactRadioButtonGroup from 'react-radio-button-group';
 import { Alert, ControlLabel, FormControl, FormGroup, HelpBlock, Radio } from 'react-bootstrap';
 import Form from "react-jsonschema-form";
 
