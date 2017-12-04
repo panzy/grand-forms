@@ -16,6 +16,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
 
 import FormDestination from './FormDestination';
+import FormEditable from './FormEditable';
 import Navbar from './Navbar';
 
 // react-toastify 似乎不兼容 react@16.
@@ -49,6 +50,7 @@ class FormEditor extends Component {
     this.handleUiSchemaChange = this.handleUiSchemaChange.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.onFormEditableChange = this.onFormEditableChange.bind(this);
   }
 
   componentDidMount() {
@@ -130,6 +132,15 @@ class FormEditor extends Component {
     event.preventDefault();
   }
 
+  onFormEditableChange(schema) {
+    console.log('onFormEditableChange', schema);
+
+    this.setState({
+      schema,
+      schemaJson: JSON.stringify(schema, null, "  "),
+    });
+  }
+
   render() {
 
     var navbar, body;
@@ -166,7 +177,23 @@ class FormEditor extends Component {
         children={<span/>/* no default submit buttons */}
       />;
 
-      var editor = (
+      var editable = (
+        <div>
+          <div className='col-sm-3'>
+          </div>
+          <div className='col-sm-6'>
+            <FormEditable
+              schema={this.state.schema || {}}
+              uiSchema={this.state.uiSchema || {}}
+              formData={this.state.formData}
+              onChange={this.onFormEditableChange}
+            />
+          </div>
+          <div className='col-sm-3'>
+          </div>
+        </div>
+      );
+      var code = (
         <div>
           <div className='col-sm-9'>
             <form onSubmit={this.handleSubmit}>
@@ -223,11 +250,15 @@ class FormEditor extends Component {
           <Tabs>
             <TabList>
               <Tab>设计表单</Tab>
+              <Tab>代码</Tab>
               <Tab>数据去向</Tab>
             </TabList>
 
             <TabPanel>
-              {editor}
+              {editable}
+            </TabPanel>
+            <TabPanel>
+              {code}
             </TabPanel>
             <TabPanel>
               <FormDestination data={this.state.destination}/>
