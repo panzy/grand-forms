@@ -13,9 +13,7 @@ import EditInPlace from './EditInPlace';
  * @prop {string} [schema.format] string format, e.g., "email", "data-url",
  * "date".
  * @prop {string} [schema.default] default value.
- * @prop {function} [onBeginEditing] 进入编辑状态时回调，参数为 (id)
  * @prop {function} onChange 回调，参数为 (id, name, schema)。
- * @prop {function} [onEndEditing] 离开编辑状态时回调，参数为 (id)
  * @prop {bool} initialEditing 初始化为编辑模式还是预览模式？
  */
 class FieldEditable extends Component {
@@ -23,17 +21,11 @@ class FieldEditable extends Component {
     super(props);
 
     this.state = {
-      editing: false,
+      editing: this.props.initialEditing,
       schema: props.schema
     };
     this.onChange = this.onChange.bind(this);
     this.onFormBlur = this.onFormBlur.bind(this);
-  }
-
-  onBeginEditing = () => {
-    this.setState({editing: true});
-    if (this.props.onBeginEditing)
-      this.props.onBeginEditing(this.props.id);
   }
 
   onChange(form) {
@@ -84,9 +76,7 @@ class FieldEditable extends Component {
         name='default'
         type='text'
         placeholder='缺省值'
-        onBeginEditing={this.onBeginEditing}
         onChange={this.onAttrChange}
-        onEndEditing={this.onEndEditing}
       />;
     } else if (schema.type === 'number') {
       inputComp = <EditInPlace
@@ -94,9 +84,7 @@ class FieldEditable extends Component {
         name='default'
         type='number'
         placeholder='缺省值'
-        onBeginEditing={this.onBeginEditing}
         onChange={this.onAttrChange}
-        onEndEditing={this.onEndEditing}
       />;
     } else if (schema.type === 'boolean') {
       inputComp = <EditInPlace
@@ -104,9 +92,7 @@ class FieldEditable extends Component {
         name='default'
         type='string'
         placeholder='缺省值'
-        onBeginEditing={this.onBeginEditing}
         onChange={this.onAttrChange}
-        onEndEditing={this.onEndEditing}
       />;
     }
 
@@ -118,9 +104,7 @@ class FieldEditable extends Component {
           name='title'
           type='text'
           placeholder='字段标题'
-          onBeginEditing={this.onBeginEditing}
           onChange={this.onAttrChange}
-          onEndEditing={this.onEndEditing}
         />
       </ControlLabel>
       {/* type, TODO: React Bootstrap Select */}
@@ -130,9 +114,7 @@ class FieldEditable extends Component {
           name='type'
           type='select'
           dropDownOptions={['string', 'number', 'boolean']}
-          onBeginEditing={this.onBeginEditing}
           onChange={this.onAttrChange}
-          onEndEditing={this.onEndEditing}
         />
       </div>
       {inputComp}

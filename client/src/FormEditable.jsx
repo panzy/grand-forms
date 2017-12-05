@@ -94,10 +94,6 @@ class FormEditable extends Component {
     }
   }
 
-  onBeginEditing = (index) => {
-    this.setState({selectedFieldIndex: index});
-  }
-
   onEndEditing = (index) => {
     this.setState({selectedFieldIndex: -1});
   }
@@ -120,12 +116,13 @@ class FormEditable extends Component {
     var fields = this.state.fields.map((a, idx) => {
       if (a._deleted) return null;
       var editing = this.state.selectedFieldIndex === idx;
-      var field = <FieldEditable key={idx} id={idx} name={a.name} schema={a}
-        initialEditing={editing}
-        onBeginEditing={this.onBeginEditing}
-        onChange={this.onFieldChange}
-        onEndEditing={this.onEndEditing}
-      />;
+      var field = <div onClick={(e) => this.selectField(idx)}>
+        <FieldEditable key={idx} id={idx} name={a.name} schema={a}
+          initialEditing={editing}
+          onChange={this.onFieldChange}
+          onEndEditing={this.onEndEditing}
+        />
+      </div>;
       var toolbar = null;
       if (editing) {
         toolbar = <div className='field-editable-toolbar'>
@@ -145,6 +142,7 @@ class FormEditable extends Component {
           name='title'
           type='text'
           placeholder='表单标题'
+          onBeginEditing={(e) => this.selectField(-1)}
           onChange={this.onAttrChange}
         />
       </h2>
@@ -153,10 +151,8 @@ class FormEditable extends Component {
     </div>;
   }
 
-  selectField(idx) {
-    return () => {
-      this.setState({selectedFieldIndex: idx});
-    };
+  selectField = (index) => {
+    this.setState({selectedFieldIndex: index});
   }
 }
 
