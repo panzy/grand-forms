@@ -32,6 +32,22 @@ class FieldEditable extends Component {
     if (name === 'default' && schema.type === 'boolean')
       value = value === 'true';
 
+    // special: convert enum from CSV to array
+    if (name === 'enum') {
+      if (value.trim().length === 0)
+        value = undefined;
+      else {
+        value = value.split(',').map(s => {
+          if (schema.type === 'number')
+            return Number.parseFloat(s);
+          else if (schema.type === 'number')
+            return Number.parseInt(s);
+          else
+            return s.trim();
+        });
+      }
+    }
+
     schema[name] = value;
     this.setState({schema});
     this.notifyChange();
@@ -54,6 +70,35 @@ class FieldEditable extends Component {
     var inputComp = <Form schema={noTitle}
       children={<span/>}
     />;
+
+    var extraOptions = null;
+
+
+    if (this.props.initialEditing) {
+      extraOptions = <div>
+        {/* name */}
+        <div>
+          <span className='pull-left field-attr-label'>字段名称:</span>
+          <EditInPlace
+            value={name}
+            name='name'
+            type='text'
+            placeholder='字段名称'
+            onChange={this.onAttrChange}
+          />
+        </div>
+
+        {/* enum */}
+        <span className='pull-left field-attr-label'>枚举值:</span>
+        <EditInPlace
+          value={(schema.enum || []).join(',')}
+          name='enum'
+          type='text'
+          placeholder='半角逗号分隔'
+          onChange={this.onAttrChange}
+        />
+      </div>;
+    }
 
     return <div>
       {/* title */}
@@ -78,21 +123,10 @@ class FieldEditable extends Component {
         />
       </div>
 
-      {/* name */
-        this.props.initialEditing ? <div>
-          <span className='pull-left field-attr-label'>字段名称:</span>
-          <EditInPlace
-            value={name}
-            name='name'
-            type='text'
-            placeholder='字段名称'
-            onChange={this.onAttrChange}
-          />
-        </div> : null
-      }
-
       {/* the input */}
       {inputComp}
+
+      {extraOptions}
     </div>;
   }
 }
