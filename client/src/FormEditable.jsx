@@ -63,7 +63,10 @@ class FormEditable extends Component {
     };
 
     this.state.fields.filter(f => !f._deleted).forEach(f => {
-      s.properties[f.name] = f;
+      var o = {};
+      Object.assign(o, f);
+      delete o.name;
+      s.properties[f.name] = o;
     });
     return s;
   }

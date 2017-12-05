@@ -21,47 +21,56 @@ class FieldEditable extends Component {
     super(props);
 
     this.state = {
+      name: props.name,
       schema: props.schema
     };
   }
 
   onAttrChange = (value, name, extraParams) => {
-    var schema = this.state.schema;
+    var newState = {};
+    if (name === 'name') {
+      // name changed
+      newState = {name: value};
+    } else {
+      // schema changed
 
-    // special: convert default value of boolean from string to boolean.
-    if (name === 'default' && schema.type === 'boolean')
-      value = value === 'true';
+      var schema = this.state.schema;
 
-    // special: convert enum from CSV to array
-    if (name === 'enum') {
-      if (value.trim().length === 0)
-        value = undefined;
-      else {
-        value = value.split(',').map(s => {
-          if (schema.type === 'number')
-            return Number.parseFloat(s);
-          else if (schema.type === 'number')
-            return Number.parseInt(s);
-          else
-            return s.trim();
-        });
+      // special: convert default value of boolean from string to boolean.
+      if (name === 'default' && schema.type === 'boolean')
+        value = value === 'true';
+
+      // special: convert enum from CSV to array
+      if (name === 'enum') {
+        if (value.trim().length === 0)
+          value = undefined;
+        else {
+          value = value.split(',').map(s => {
+            if (schema.type === 'number')
+              return Number.parseFloat(s);
+            else if (schema.type === 'number')
+              return Number.parseInt(s);
+            else
+              return s.trim();
+          });
+        }
       }
+
+      schema[name] = value;
+      newState = {schema};
     }
 
-    schema[name] = value;
-    this.setState({schema});
-    this.notifyChange();
+    this.setState(newState, this.notifyChange);
   }
 
   notifyChange() {
     if (this.props.onChange) {
-      this.props.onChange(this.props.id, this.state.schema.name, this.state.schema);
+      this.props.onChange(this.props.id, this.state.name, this.state.schema);
     }
   }
 
   render() {
-    var {name} = this.props;
-    var schema = this.state.schema;
+    var {name, schema} = this.state;
 
     // the input component: render as a Form without title and submit button.
     var noTitle = {};
