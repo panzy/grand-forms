@@ -17,6 +17,7 @@ class FormEditable extends Component {
     var schema = props.schema;
 
     this.state = {
+      title: schema.title || '未命名表单',
       fields: [],
       selectedFieldIndex: -1,
     };
@@ -55,9 +56,12 @@ class FormEditable extends Component {
    * convert fields array to schema object
    */
   buildSchema() {
-    var s = {};
-    Object.assign(s, this.props.schema);
-    s.properties = {};
+    var s = {
+      title: this.state.title,
+      type: 'object',
+      properties: {},
+    };
+
     this.state.fields.filter(f => !f._deleted).forEach(f => {
       s.properties[f.name] = f;
     });
@@ -88,7 +92,7 @@ class FormEditable extends Component {
 
   onAttrChange = (value, name, extraParams) => {
     if (name === 'title') {
-      this.props.schema.title = value;
+      this.setState({title: value});
       this.notifyChange();
     }
   }
@@ -137,7 +141,7 @@ class FormEditable extends Component {
     return <div>
       <h2>
         <EditInPlace
-          value={schema.title || '无标题'}
+          value={this.state.title}
           name='title'
           type='text'
           placeholder='表单标题'
