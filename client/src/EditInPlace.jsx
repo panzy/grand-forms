@@ -5,6 +5,7 @@
  */
 
 import React, { Component } from 'react';
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 
 export default class EditInPlace extends Component {
@@ -139,7 +140,9 @@ export default class EditInPlace extends Component {
     }
 
     if (!this.state.editable) {
-      return <span onClick={isDisabled ? null : this.onEditEnable}>{this.state.value}</span>
+      return <span
+        className={classNames('edit-in-place-label', {'empty': !this.state.value})}
+        onClick={isDisabled ? null : this.onEditEnable}>{this.state.value}</span>
     } else {
       console.log(type)
       // Custom Inputs

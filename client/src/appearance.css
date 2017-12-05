@@ -109,3 +109,10 @@ ul.forms a.view {
   color: gray;
   margin-right: 10px;
 }
+
+.edit-in-place-label.empty {
+  color: gray;
+}
+.edit-in-place-label.empty:after {
+  content: '<单击此处编辑>';
+}
