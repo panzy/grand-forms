@@ -80,33 +80,35 @@ class FieldEditable extends Component {
       children={<span/>}
     />;
 
-    var extraOptions = null;
+    var extraOptions = [];
 
 
     if (this.props.initialEditing) {
-      extraOptions = <div>
-        {/* name */}
-        <div>
-          <span className='pull-left field-attr-label'>字段名称:</span>
-          <EditInPlace
-            value={name}
-            name='name'
-            type='text'
-            placeholder='字段名称'
-            onChange={this.onAttrChange}
-          />
-        </div>
-
-        {/* enum */}
-        <span className='pull-left field-attr-label'>枚举值:</span>
+      // edit field name
+      extraOptions.push(<div key='name'>
+        <span className='pull-left field-attr-label'>字段名称:</span>
         <EditInPlace
-          value={(schema.enum || []).join(',')}
-          name='enum'
+          value={name}
+          name='name'
           type='text'
-          placeholder='半角逗号分隔'
+          placeholder='字段名称'
           onChange={this.onAttrChange}
         />
-      </div>;
+      </div>);
+
+      // edit field enums
+      if (schema.type !== 'boolean') {
+        extraOptions.push(<div key='enum'>
+          <span className='pull-left field-attr-label'>枚举值:</span>
+          <EditInPlace
+            value={(schema.enum || []).join(',')}
+            name='enum'
+            type='text'
+            placeholder='半角逗号分隔'
+            onChange={this.onAttrChange}
+          />
+        </div>);
+      }
     }
 
     return <div>
@@ -135,7 +137,9 @@ class FieldEditable extends Component {
       {/* the input */}
       {inputComp}
 
-      {extraOptions}
+      <div className='field-editable extra-options'>
+        {extraOptions}
+      </div>
     </div>;
   }
 }
