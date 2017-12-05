@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { ControlLabel } from "react-bootstrap";
 import EditInPlace from './EditInPlace';
+import Form from 'react-jsonschema-form';
 
 /**
  * @prop {string} id 用于帮助 onChange 回调定位被修改的字段（尤其当 name
@@ -46,16 +47,13 @@ class FieldEditable extends Component {
     var {name} = this.props;
     var schema = this.state.schema;
 
-    var inputComp = null;
-    if (schema.type === 'string') {
-      inputComp = <input type='text'/>;
-    } else if (schema.type === 'number') {
-      inputComp = <input type='number'/>;
-    } else if (schema.type === 'integer') {
-      inputComp = <input type='number'/>;
-    } else if (schema.type === 'boolean') {
-      inputComp = <input type='checkbox'/>;
-    }
+    // the input component: render as a Form without title and submit button.
+    var noTitle = {};
+    Object.assign(noTitle, schema);
+    noTitle.title = undefined;
+    var inputComp = <Form schema={noTitle}
+      children={<span/>}
+    />;
 
     return <div>
       {/* title */}
@@ -94,9 +92,7 @@ class FieldEditable extends Component {
       }
 
       {/* the input */}
-      <div>
-        {inputComp}
-      </div>
+      {inputComp}
     </div>;
   }
 }
