@@ -1,8 +1,9 @@
 import React, { Component } from "react";
+import classNames from 'classnames';
 import Form from "react-jsonschema-form";
 
+import EditInPlace from './EditInPlace';
 import FieldEditable from './FieldEditable';
-import TextEditable from './TextEditable';
 
 /**
  * @prop {object} schema
@@ -80,15 +81,34 @@ class FormEditable extends Component {
     };
   }
 
+  notifyChange() {
+    if (this.props.onChange) {
+      this.props.onChange(this.buildSchema());
+    }
+  }
+
+  onAttrChange = (value, name, extraParams) => {
+    if (name === 'title') {
+      this.props.schema.title = value;
+      this.notifyChange();
+    }
+  }
+
+  onBeginEditing = (index) => {
+    this.setState({selectedFieldIndex: index});
+  }
+
+  onEndEditing = (index) => {
+    this.setState({selectedFieldIndex: -1});
+  }
+
   onFieldChange(index, name, schema) {
     console.log('onFieldChange', index, name, schema);
     var fields = this.state.fields;
     fields[index] = schema;
     fields[index].name = name;
     this.setState({fields});
-    if (this.props.onChange) {
-      this.props.onChange(this.buildSchema());
-    }
+    this.notifyChange();
   }
 
   render() {
@@ -102,27 +122,32 @@ class FormEditable extends Component {
       var editing = this.state.selectedFieldIndex === idx;
       var field = <FieldEditable key={idx} id={idx} name={a.name} schema={a}
         initialEditing={editing}
-        onChange={this.onFieldChange}/>;
+        onBeginEditing={this.onBeginEditing}
+        onChange={this.onFieldChange}
+        onEndEditing={this.onEndEditing}
+      />;
+      var toolbar = null;
       if (editing) {
-        return <div key={idx}>
-          <div className='field-header'>
-            <a href='#' onClick={this.clearSelection}>退出修改</a>
-          </div>
-          {field}
-        </div>;
-      } else {
-        return <div key={idx}>
-          <div className='field-header'>
-            <a href='#' onClick={this.selectField(idx).bind(this)}>修改</a>
-            &nbsp;|&nbsp;
-            <a href='#' onClick={this.deleteField(idx).bind(this)}>删除</a>
-          </div>
-          {field}
+        toolbar = <div className='field-editable-toolbar'>
+          <a href='#' onClick={this.deleteField(idx).bind(this)}>删除</a>
         </div>;
       }
+      return <div key={idx}
+        className={classNames('field-editable', {editing})}>
+        {field}
+        {toolbar}
+      </div>;
     }).filter(c => c !== null);
     return <div>
-      <h2><TextEditable value={schema.title || '无标题'}/></h2>
+      <h2>
+        <EditInPlace
+          value={schema.title || '无标题'}
+          name='title'
+          type='text'
+          placeholder='表单标题'
+          onChange={this.onAttrChange}
+        />
+      </h2>
       {fields}
       <div> <a href='#' onClick={this.addField}>添加</a> </div>
     </div>;

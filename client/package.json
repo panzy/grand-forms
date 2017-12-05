@@ -15,6 +15,7 @@
   },
   "proxy": "http://localhost:3001",
   "devDependencies": {
+    "classnames": "^2.2.5",
     "moment": "^2.19.2",
     "react-bootstrap": "^0.31.5",
     "react-jsonschema-form": "file:///home/panzy/workspace/react-jsonschema-form",
