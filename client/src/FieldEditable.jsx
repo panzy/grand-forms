@@ -47,9 +47,9 @@ class FieldEditable extends Component {
         else {
           value = value.split(',').map(s => {
             if (schema.type === 'number')
-              return Number.parseFloat(s);
-            else if (schema.type === 'number')
-              return Number.parseInt(s);
+              return Number.parseFloat(s) || 0;
+            else if (schema.type === 'integer')
+              return Number.parseInt(s) || 0;
             else
               return s.trim();
           });
