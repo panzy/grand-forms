@@ -103,3 +103,8 @@ ul.forms a.view {
   height: 30px;
   text-align: right;
 }
+
+.field-attr-label {
+  color: gray;
+  margin-right: 10px;
+}

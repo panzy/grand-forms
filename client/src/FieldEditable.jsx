@@ -20,15 +20,8 @@ class FieldEditable extends Component {
     super(props);
 
     this.state = {
-      editing: this.props.initialEditing,
       schema: props.schema
     };
-  }
-
-  onEndEditing = () => {
-    this.setState({editing: false});
-    if (this.props.onEndEditing)
-      this.props.onEndEditing(this.props.id);
   }
 
   onAttrChange = (value, name, extraParams) => {
@@ -55,29 +48,13 @@ class FieldEditable extends Component {
 
     var inputComp = null;
     if (schema.type === 'string') {
-      inputComp = <EditInPlace
-        value={schema.default}
-        name='default'
-        type='text'
-        placeholder='缺省值'
-        onChange={this.onAttrChange}
-      />;
+      inputComp = <input type='text'/>;
     } else if (schema.type === 'number') {
-      inputComp = <EditInPlace
-        value={schema.default}
-        name='default'
-        type='number'
-        placeholder='缺省值'
-        onChange={this.onAttrChange}
-      />;
+      inputComp = <input type='number'/>;
+    } else if (schema.type === 'integer') {
+      inputComp = <input type='number'/>;
     } else if (schema.type === 'boolean') {
-      inputComp = <EditInPlace
-        value={(schema.default || false).toString()}
-        name='default'
-        type='text'
-        placeholder='缺省值'
-        onChange={this.onAttrChange}
-      />;
+      inputComp = <input type='checkbox'/>;
     }
 
     return <div>
@@ -91,17 +68,35 @@ class FieldEditable extends Component {
           onChange={this.onAttrChange}
         />
       </ControlLabel>
+
       {/* type, TODO: React Bootstrap Select */}
       <div className='pull-right'>
         <EditInPlace
           value={schema.type}
           name='type'
           type='select'
-          dropDownOptions={['string', 'number', 'boolean']}
+          dropDownOptions={['string', 'number', 'integer', 'boolean']}
           onChange={this.onAttrChange}
         />
       </div>
-      {inputComp}
+
+      {/* name */
+        this.props.initialEditing ? <div>
+          <span className='pull-left field-attr-label'>字段名称:</span>
+          <EditInPlace
+            value={name}
+            name='name'
+            type='text'
+            placeholder='字段名称'
+            onChange={this.onAttrChange}
+          />
+        </div> : null
+      }
+
+      {/* the input */}
+      <div>
+        {inputComp}
+      </div>
     </div>;
   }
 }
