@@ -80,8 +80,8 @@ class FieldEditable extends Component {
       children={<span/>}
     />;
 
+    var extraOptionsWrapper = null;
     var extraOptions = [];
-
 
     if (this.props.initialEditing) {
       // edit field name
@@ -111,6 +111,12 @@ class FieldEditable extends Component {
       }
     }
 
+    if (extraOptions.length > 0) {
+      extraOptionsWrapper = <div className='field-editable extra-options'>
+        {extraOptions}
+      </div>;
+    }
+
     return <div>
       {/* title */}
       <ControlLabel>
@@ -137,9 +143,7 @@ class FieldEditable extends Component {
       {/* the input */}
       {inputComp}
 
-      <div className='field-editable extra-options'>
-        {extraOptions}
-      </div>
+      {extraOptionsWrapper}
     </div>;
   }
 }
