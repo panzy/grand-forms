@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import classNames from 'classnames';
-import Form from "react-jsonschema-form";
 
 import EditInPlace from './EditInPlace';
 import FieldEditable from './FieldEditable';

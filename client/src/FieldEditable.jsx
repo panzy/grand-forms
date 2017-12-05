@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { ControlLabel } from "react-bootstrap";
-import Form from "react-jsonschema-form";
 import EditInPlace from './EditInPlace';
 
 /**
@@ -24,27 +23,12 @@ class FieldEditable extends Component {
       editing: this.props.initialEditing,
       schema: props.schema
     };
-    this.onChange = this.onChange.bind(this);
-    this.onFormBlur = this.onFormBlur.bind(this);
-  }
-
-  onChange(form) {
-    if (this.props.onChange) {
-      this.setState({schema: form.formData});
-    }
   }
 
   onEndEditing = () => {
     this.setState({editing: false});
     if (this.props.onEndEditing)
       this.props.onEndEditing(this.props.id);
-  }
-
-  onFormBlur() {
-    if (this.props.onChange && this.state.schema) {
-      console.log('onFormBlur', this.props.id, this.state.schema.name, this.state.schema);
-      this.props.onChange(this.props.id, this.state.schema.name, this.state.schema);
-    }
   }
 
   onAttrChange = (value, name, extraParams) => {
@@ -90,7 +74,7 @@ class FieldEditable extends Component {
       inputComp = <EditInPlace
         value={(schema.default || false).toString()}
         name='default'
-        type='string'
+        type='text'
         placeholder='缺省值'
         onChange={this.onAttrChange}
       />;
