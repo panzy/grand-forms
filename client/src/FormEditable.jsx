@@ -95,8 +95,7 @@ class FormEditable extends Component {
 
   onAttrChange = (value, name, extraParams) => {
     if (name === 'title') {
-      this.setState({title: value});
-      this.notifyChange();
+      this.setState({title: value}, this.notifyChange);
     }
   }
 
@@ -109,8 +108,7 @@ class FormEditable extends Component {
     var fields = this.state.fields;
     fields[index] = schema;
     fields[index].name = name;
-    this.setState({fields});
-    this.notifyChange();
+    this.setState({fields}, this.notifyChange);
   }
 
   render() {
