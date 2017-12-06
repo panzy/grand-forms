@@ -15,6 +15,7 @@ import 'brace/theme/monokai';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
 
+import ErrorBoundary from './ErrorBoundary';
 import FormDestination from './FormDestination';
 import FormEditable from './FormEditable';
 import Navbar from './Navbar';
@@ -37,6 +38,7 @@ class FormEditor extends Component {
     super(props);
 
     this.state = {
+      contentVersion: 0, // +1 every time a change is made
       loading: LOADING,
       schema: null, // object
       uiSchema: null, // object
@@ -93,7 +95,7 @@ class FormEditor extends Component {
       schema = JSON.parse(value);
     } catch(err) {
     }
-    this.setState({schema, schemaJson: value});
+    this.setState({schema, schemaJson: value, contentVersion: this.state.contentVersion + 1});
   }
 
   handleUiSchemaChange(value, event) {
@@ -102,7 +104,7 @@ class FormEditor extends Component {
       uiSchema = JSON.parse(value);
     } catch(err) {
     }
-    this.setState({uiSchema, uiSchemaJson: value});
+    this.setState({uiSchema, uiSchemaJson: value, contentVersion: this.state.contentVersion + 1});
   }
 
   handleDelete() {
@@ -138,6 +140,7 @@ class FormEditor extends Component {
     this.setState({
       schema,
       schemaJson: JSON.stringify(schema, null, "  "),
+      contentVersion: this.state.contentVersion + 1
     });
   }
 
@@ -170,12 +173,25 @@ class FormEditor extends Component {
         />
       );
 
-      var preview = <Form
-        schema={this.state.schema || {}}
-        uiSchema={this.state.uiSchema || {}}
-        formData={this.state.formData}
-        children={<span/>/* no default submit buttons */}
-      />;
+      // 由于预览是实时渲染的，难免遇到非法的schema（尽管它是合法的JSON）。
+      // 例如，假设用户希望键入
+      //    "format": "date"
+      // 那么当他已经键入
+      //    "format": "d"
+      // 时，Form 渲染会抛出如下错误：
+      //    Error: No widget "d" for type "string"
+      // 所以需要用 ErrorBoundary 捕捉这类错误。
+      //
+      // 另外为了帮助 ErrorBoudary 从之前的错误中恢复，我们传个 contentVersion
+      // 参数。
+      var preview = <ErrorBoundary contentVersion={this.state.contentVersion}>
+        <Form
+          schema={this.state.schema || {}}
+          uiSchema={this.state.uiSchema || {}}
+          formData={this.state.formData}
+          children={<span/>/* no default submit buttons */}
+        />
+      </ErrorBoundary>;
 
       var editable = (
         <div>
