@@ -7,19 +7,20 @@ import FieldEditable from './FieldEditable';
 /**
  * @prop {object} schema
  * @prop {object} [uiSchema]
- * @prop {function} [onChange]
+ * @prop {function} [onChange] (schema, uiSchema)
  */
 class FormEditable extends Component {
 
   constructor(props) {
     super(props);
 
-    var schema = props.schema;
+    var {schema, uiSchema} = props;
 
     this.state = {
-      title: schema.title || '未命名表单',
-      fields: [],
+      fields: [], // from schema.properties. convert object to array for convenience of manipulating fields.
       selectedFieldIndex: -1,
+      title: schema.title || '未命名表单',
+      uiSchema: uiSchema || {},
     };
 
     if (schema && schema.type === 'object') {
@@ -45,11 +46,7 @@ class FormEditable extends Component {
       title: '新字段 ' + suffix,
       type: 'string'
     });
-    this.setState({fields, selectedFieldIndex: fields.length - 1});
-
-    if (this.props.onChange) {
-      this.props.onChange(this.buildSchema());
-    }
+    this.setState({fields, selectedFieldIndex: fields.length - 1}, this.notifyChange);
   }
 
   /**
@@ -80,16 +77,15 @@ class FormEditable extends Component {
       var fields = this.state.fields;
       // 为了保持 React key 不变，不要删除 fields 数组中的元素
       fields[idx]._deleted = true;
-      this.setState({fields});
-      if (this.props.onChange) {
-        this.props.onChange(this.buildSchema());
-      }
+      this.setState({fields}, this.notifyChange);
     };
   }
 
   notifyChange() {
     if (this.props.onChange) {
-      this.props.onChange(this.buildSchema());
+      this.pruneUiSchema(() => {
+        this.props.onChange(this.buildSchema(), this.state.uiSchema);
+      });
     }
   }
 
@@ -103,25 +99,53 @@ class FormEditable extends Component {
     this.setState({selectedFieldIndex: -1});
   }
 
-  onFieldChange(index, name, schema) {
-    console.log('onFieldChange', index, name, schema);
+  onFieldChange(index, name, fieldSchema, fieldUiSchema) {
+    console.log('onFieldChange', index, name, fieldSchema, fieldUiSchema);
     var fields = this.state.fields;
-    fields[index] = schema;
+    fields[index] = fieldSchema;
     fields[index].name = name;
-    this.setState({fields}, this.notifyChange);
+
+    // assign field ui schema to form ui schema
+    var uiSchema = this.state.uiSchema;
+    if (fieldUiSchema) {
+      uiSchema[name] = fieldUiSchema;
+    }
+
+    this.setState({fields, uiSchema}, this.notifyChange);
+  }
+
+  /**
+   * 清理 UI schema 中的无效内容，比如已经从 JSONSchema 中删除的属性。
+   *
+   * 这个操作更新的是 this.state.uiSchema。
+   *
+   * @arg {function} callback 将传递给 this.setState().
+   */
+  pruneUiSchema(callback) {
+    var uiSchema = {};
+    Object.entries(this.state.uiSchema).forEach(arr => {
+      const [name, value] = arr;
+      if (Object.keys(value).length > 0
+        && this.state.fields.findIndex(f => !f._deleted && f.name === name) !== -1)
+        uiSchema[name] = value;
+    });
+    this.setState({uiSchema}, callback);
   }
 
   render() {
-    var {schema, uiSchema} = this.props;
+    var {schema} = this.props;
+    var {uiSchema} = this.state;
 
     // 不要用 field name 作为 FieldEditable.key，以免 FieldEditable 在修改 name
     // 时自身的 key 一直在变化，那会导致 DOM
     // 节点一直被替换，以致无法继续保持焦点。
-    var fields = this.state.fields.map((a, idx) => {
-      if (a._deleted) return null;
+    var fields = this.state.fields.map((fieldSchema, idx) => {
+      if (fieldSchema._deleted) return null;
       var editing = this.state.selectedFieldIndex === idx;
       var field = <div onClick={(e) => this.selectField(idx)}>
-        <FieldEditable key={idx} id={idx} name={a.name} schema={a}
+        <FieldEditable key={idx} id={idx} name={fieldSchema.name}
+          schema={fieldSchema}
+          uiSchema={uiSchema[fieldSchema.name]}
           initialEditing={editing}
           onChange={this.onFieldChange}
           onEndEditing={this.onEndEditing}

@@ -134,12 +134,14 @@ class FormEditor extends Component {
     event.preventDefault();
   }
 
-  onFormEditableChange(schema) {
-    console.log('onFormEditableChange', schema);
+  onFormEditableChange(schema, uiSchema) {
+    console.log('onFormEditableChange', schema, uiSchema);
 
     this.setState({
       schema,
       schemaJson: JSON.stringify(schema, null, "  "),
+      uiSchema,
+      uiSchemaJson: JSON.stringify(uiSchema, null, "  "),
       contentVersion: this.state.contentVersion + 1
     });
   }

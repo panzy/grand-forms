@@ -13,17 +13,76 @@ import Form from 'react-jsonschema-form';
  * @prop {string} [schema.format] string format, e.g., "email", "data-url",
  * "date".
  * @prop {string} [schema.default] default value.
- * @prop {function} onChange 回调，参数为 (id, name, schema)。
+ * @prop {object} [uiSchema] field ui schema
+ * @prop {function} onChange 回调，参数为 (id, name, schema, uiSchema)。
  * @prop {bool} initialEditing 初始化为编辑模式还是预览模式？
  */
 class FieldEditable extends Component {
   constructor(props) {
     super(props);
 
+    const {name, schema, uiSchema} = props;
+
     this.state = {
-      name: props.name,
-      schema: props.schema
+      name,
+      schema,
+      uiSchema: uiSchema || {}, // 为了访问方便，此属性永不为 undefined.
     };
+
+    // 字段类型枚举
+    // 这个列表是面向用户而非 JSONSchema 的，所以它并不一一对应于 JSONSchema
+    // 中的 type 属性，事实上它与 type, format 属性，甚至 UI schema 都有关系。
+    this.types = ['string', 'number', 'integer', 'boolean', 'file', 'image', 'video'];
+  }
+
+  /**
+   * 从 this.types 中找出一个适合当前 {schema, uiSchema} 的值。
+   */
+  getFieldType() {
+    const {type, format} = this.state.schema;
+    const uiOptions = this.state.uiSchema['ui:options'];
+    switch (format || '') {
+      case 'data-url':
+        if (uiOptions && /^image\//i.test(uiOptions.accept))
+          return 'image';
+        if (uiOptions && /^video\//i.test(uiOptions.accept))
+          return 'video';
+        return 'file';
+      default:
+        return type;
+    }
+  }
+
+  /**
+   * 用 this.types 中的一个值设置 {schema, uiSchema}。
+   */
+  setFieldType(t) {
+    var {schema, uiSchema} = this.state;
+
+    switch (t) {
+      case 'file':
+        schema.type = 'string';
+        schema.format = 'data-url';
+        // remove uiSchema['ui:options'].accept
+        if (uiSchema['ui:options']) {
+          delete uiSchema['ui:options'].accept;
+          if (Object.keys(uiSchema['ui:options']).length === 0)
+            delete uiSchema['ui:options'];
+        }
+        break;
+      case 'image':
+      case 'video':
+        schema.type = 'string';
+        schema.format = 'data-url';
+        if (!uiSchema['ui:options'])
+          uiSchema['ui:options'] = {};
+        uiSchema['ui:options'].accept = t + '/*';
+        break;
+      default:
+        schema.type = t;
+        delete schema.format;
+    }
+    this.setState({schema, uiSchema}, this.notifyChange);
   }
 
   onAttrChange = (value, name, extraParams) => {
@@ -56,6 +115,12 @@ class FieldEditable extends Component {
         }
       }
 
+      // special: interpret user selected field type
+      if (name === 'type') {
+        this.setFieldType(value);
+        return;
+      }
+
       schema[name] = value;
       newState = {schema};
     }
@@ -65,18 +130,18 @@ class FieldEditable extends Component {
 
   notifyChange() {
     if (this.props.onChange) {
-      this.props.onChange(this.props.id, this.state.name, this.state.schema);
+      this.props.onChange(this.props.id, this.state.name, this.state.schema, this.state.uiSchema);
     }
   }
 
   render() {
-    var {name, schema} = this.state;
+    var {name, schema, uiSchema} = this.state;
 
     // the input component: render as a Form without title and submit button.
     var noTitle = {};
     Object.assign(noTitle, schema);
     noTitle.title = undefined;
-    var inputComp = <Form schema={noTitle}
+    var inputComp = <Form schema={noTitle} uiSchema={uiSchema}
       children={<span/>}
     />;
 
@@ -97,7 +162,7 @@ class FieldEditable extends Component {
       </div>);
 
       // edit field enums
-      if (schema.type !== 'boolean') {
+      if (schema.type !== 'boolean' && schema.format !== 'data-url') {
         extraOptions.push(<div key='enum'>
           <span className='pull-left field-attr-label'>枚举值:</span>
           <EditInPlace
@@ -132,10 +197,10 @@ class FieldEditable extends Component {
       {/* type, TODO: React Bootstrap Select */}
       <div className='pull-right'>
         <EditInPlace
-          value={schema.type}
+          value={this.getFieldType()}
           name='type'
           type='select'
-          dropDownOptions={['string', 'number', 'integer', 'boolean']}
+          dropDownOptions={this.types}
           onChange={this.onAttrChange}
         />
       </div>
