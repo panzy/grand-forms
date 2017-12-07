@@ -52,6 +52,7 @@ class FormView extends Component {
       fetch('/api/forms/' + this.props.id).then(r => {
         if (r.ok) {
           return r.json().then(form => {
+            document.title = form.schema.title;
             this.setState({
               schema: form.schema,
               uiSchema: form.uiSchema,
