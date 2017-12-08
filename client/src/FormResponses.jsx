@@ -26,6 +26,8 @@ class FormResponses extends Component {
     fetch('/api/forms/' + this.props.id + '/resp').then(r => {
       if (r.ok) {
         r.json().then(data => {
+          if (data.schema && data.schema.title)
+            document.title = data.schema.title;
           data.loading = LOADED;
           this.setState(data);
         });
