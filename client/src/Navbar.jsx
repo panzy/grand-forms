@@ -1,5 +1,5 @@
 import React  from 'react';
-import { Nav, Navbar, NavDropdown, NavItem } from 'react-bootstrap';
+import { Nav, Navbar, NavDropdown } from 'react-bootstrap';
 
 /**
  * @prop {string} [title] brand text，缺省为应用程序的名称。
@@ -11,13 +11,6 @@ import { Nav, Navbar, NavDropdown, NavItem } from 'react-bootstrap';
  * @prop {Array<MenuItem>} [moreOptions] 将放进最右边的标题为“更多操作”的 NavDropdown 里。
  */
 function MyNavbar(props) {
-  var logo;
-  if (props.backUrl) {
-    logo = <span className="back glyphicon glyphicon-arrow-left"/>;
-  } else {
-    logo = <img alt='logo' src='/favicon.ico'/>;
-  }
-
   return (
     <Navbar collapseOnSelect>
       <Navbar.Header>
