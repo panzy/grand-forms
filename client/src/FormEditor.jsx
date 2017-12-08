@@ -172,13 +172,13 @@ class FormEditor extends Component {
           backUrl='/'
           backTitle='返回所有表单'
           actions={[
-            <NavItem href='#' onClick={this.handleSubmit}>保存</NavItem>,
+            <NavItem key='save' onClick={this.handleSubmit}>保存</NavItem>,
           ]}
           moreActions={[
-            <MenuItem href={viewUrl} target='_blank'>使用表单</MenuItem>,
-            <MenuItem href={respUrl} target='_blank'>查看数据</MenuItem>,
-            <MenuItem divider />,
-            <MenuItem href='#' onClick={this.handleDelete}>删除表单</MenuItem>,
+            <MenuItem key='view' href={viewUrl} target='_blank'>使用表单</MenuItem>,
+            <MenuItem key='resp' href={respUrl} target='_blank'>查看数据</MenuItem>,
+            <MenuItem key='div' divider />,
+            <MenuItem key='delete' onClick={this.handleDelete}>删除表单</MenuItem>,
           ]}
         />
       );
