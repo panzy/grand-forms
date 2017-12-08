@@ -30,6 +30,11 @@ body {
   margin: 0px auto;
 }
 
+.form-editable {
+  width: 50%;
+  max-width: 600px;
+}
+
 .table.responses img.attachment {
   height: 100px;
 }

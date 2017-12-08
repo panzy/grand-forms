@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import AceEditor from 'react-ace';
 import Form from "react-jsonschema-form";
 
+import { MenuItem, NavItem } from 'react-bootstrap';
+
 // tabs
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
@@ -165,12 +167,15 @@ class FormEditor extends Component {
         <Navbar
           title={this.state.schema && this.state.schema.title ? this.state.schema.title : '未命名表单'}
           backUrl='/'
-          backTitle='所有表单'
+          backTitle='返回所有表单'
           actions={[
-            <a href='#' onClick={this.handleSubmit}>保存</a>,
-            <a href={viewUrl} target='_blank'>使用表单</a>,
-            <a href={respUrl} target='_blank'>查看数据</a>,
-            <a href='#' onClick={this.handleDelete}>删除表单</a>,
+            <NavItem href='#' onClick={this.handleSubmit}>保存</NavItem>,
+          ]}
+          moreActions={[
+            <MenuItem href={viewUrl} target='_blank'>使用表单</MenuItem>,
+            <MenuItem href={respUrl} target='_blank'>查看数据</MenuItem>,
+            <MenuItem divider />,
+            <MenuItem href='#' onClick={this.handleDelete}>删除表单</MenuItem>,
           ]}
         />
       );
@@ -195,22 +200,6 @@ class FormEditor extends Component {
         />
       </ErrorBoundary>;
 
-      var editable = (
-        <div>
-          <div className='col-sm-3'>
-          </div>
-          <div className='col-sm-6'>
-            <FormEditable
-              schema={this.state.schema || {}}
-              uiSchema={this.state.uiSchema || {}}
-              formData={this.state.formData}
-              onChange={this.onFormEditableChange}
-            />
-          </div>
-          <div className='col-sm-3'>
-          </div>
-        </div>
-      );
       var code = (
         <div>
           <div className='col-sm-9'>
@@ -273,13 +262,24 @@ class FormEditor extends Component {
             </TabList>
 
             <TabPanel>
-              {editable}
+              <div className='container'>
+                <div className='center-block form-editable'>
+                  <FormEditable
+                    schema={this.state.schema || {}}
+                    uiSchema={this.state.uiSchema || {}}
+                    formData={this.state.formData}
+                    onChange={this.onFormEditableChange}
+                  />
+                </div>
+              </div>
             </TabPanel>
             <TabPanel>
               {code}
             </TabPanel>
             <TabPanel>
-              <FormDestination data={this.state.destination}/>
+              <div className='container'>
+                <FormDestination data={this.state.destination}/>
+              </div>
             </TabPanel>
           </Tabs>
           <ToastContainer

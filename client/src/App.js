@@ -3,6 +3,7 @@ import {
   BrowserRouter as Router,
   Route
 } from 'react-router-dom';
+import { NavItem } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import uuidv4 from 'uuid/v4';
 
@@ -66,13 +67,11 @@ class App extends Component {
       <div>
         <Navbar
           actions={
-            <ul className='nav navbar-nav'>
-              <li><a href='#' onClick={this.onCreateForm}>创建表单</a></li>
-            </ul>
+              <NavItem href='#' onClick={this.onCreateForm}>创建表单</NavItem>
           }
         />
 
-        <div className='col-sm-12'>
+        <div className='container'>
           <h2>所有表单</h2>
           <ul className='forms'>
             {

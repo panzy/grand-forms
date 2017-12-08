@@ -1,43 +1,47 @@
 import React  from 'react';
+import { Nav, Navbar, NavDropdown, NavItem } from 'react-bootstrap';
 
 /**
  * @prop {string} [title] brand text，缺省为应用程序的名称。
  * @prop {string} [subTitle]
  * @prop {string} [backUrl] 若非空，则显示后退按钮。
  * @prop {string} [backTitle] 后退按钮的 title 属性。
- * @prop {Component|Array<Component>} [actions] 比如一些 buttons。
+ * @prop {Array<NavItem|NavDropdown>} [links] 将靠左摆放。
+ * @prop {Array<NavItem>} [options] 将靠右摆放。
+ * @prop {Array<MenuItem>} [moreOptions] 将放进最右边的标题为“更多操作”的 NavDropdown 里。
  */
-function Navbar(props) {
-  var logo, actions;
+function MyNavbar(props) {
+  var logo;
   if (props.backUrl) {
-    logo = <a className="back glyphicon glyphicon-arrow-left" href={props.backUrl} title={props.backTitle || '返回'}/>;
+    logo = <span className="back glyphicon glyphicon-arrow-left"/>;
   } else {
     logo = <img alt='logo' src='/favicon.ico'/>;
   }
 
-  if (Array.isArray(props.actions))
-    actions = props.actions.map((a, idx) => <li key={idx}>{a}</li>);
-  else if (props.actions)
-    actions = <li>{props.actions}</li>;
-  else
-    actions = null;
-
   return (
-    <div className='navbar navbar-default'>
-      <div className="container-fluid">
-        <div className="navbar-header">
-          <span className="navbar-brand">
-            {logo}
-            {props.title || 'Grand Forms'}
-            {props.subTitle ? <small>&nbsp;{props.subTitle}</small> : null}
-          </span>
-        </div>
-        <div className="navbar-right">
-          <ul className='nav navbar-nav'> {actions} </ul>
-        </div>
-      </div>
-    </div>
+    <Navbar collapseOnSelect>
+      <Navbar.Header>
+        <Navbar.Brand>
+          <a href={props.backUrl} title={props.backTitle}>{props.title || 'Grand Forms'}</a>
+        </Navbar.Brand>
+        <Navbar.Toggle />
+      </Navbar.Header>
+      <Navbar.Collapse>
+        <Nav>
+          {props.links}
+        </Nav>
+        <Nav pullRight>
+          {props.actions}
+          {
+            props.moreActions && props.moreActions.length > 0 ?
+              <NavDropdown eventKey={3} title="更多操作" id="basic-nav-dropdown">
+                {props.moreActions}
+              </NavDropdown> : null
+          }
+        </Nav>
+      </Navbar.Collapse>
+    </Navbar>
   );
 }
 
-export default Navbar;
+export default MyNavbar;
