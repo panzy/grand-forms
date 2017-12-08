@@ -117,9 +117,11 @@ function Cell(props) {
         mediaTag = <video className='attachment' src={value} controls="controls"/>;
       return <td>
         {mediaTag}
-        <div>
+        {/* 对于比较大的文件，这样的下载链接是没用的（文件损坏）：
           <a href={value} download={filename}>{'[附件] ' + filename}</a>
-        </div>
+          所以这里就不提供下载了。 */
+        }
+        <div> {'[附件] ' + filename} </div>
       </td>;
     } else {
       return <td></td>;
