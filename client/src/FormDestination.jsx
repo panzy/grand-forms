@@ -91,7 +91,7 @@ class FormDestination extends Component {
   render() {
     var detail = null;
 
-    var type = this.state && this.state.type || 'default';
+    var type = (this.state && this.state.type) || 'default';
 
     if (type === 'db') {
       detail = (
