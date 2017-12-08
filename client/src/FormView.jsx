@@ -1,19 +1,7 @@
 import React, { Component } from "react";
-import AceEditor from 'react-ace';
 import Form from "react-jsonschema-form";
 
-// AceEditor themes
-import brace from 'brace';
-import 'brace/mode/json';
-import 'brace/theme/monokai';
-
-import { ToastContainer, toast_ } from 'react-toastify';
-
-// XXX react-toastify does not work
-var toast = {
-  success: (msg) => alert(msg),
-  error: (msg) => alert(msg),
-};
+import { ToastContainer, toast } from 'react-toastify';
 
 /** loading state constants. */
 const LOADING = 0;

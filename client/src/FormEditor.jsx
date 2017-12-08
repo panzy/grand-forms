@@ -22,12 +22,6 @@ import FormEditable from './FormEditable';
 import Navbar from './Navbar';
 
 
-// react-toastify 似乎不兼容 react@16.
-const toastStub = {
-  success: (msg) => alert(msg),
-  error: (msg) => alert(msg),
-};
-
 const LOADING = 0;
 const LOADED = 1;
 const LOAD_FAILED = 2;
@@ -115,9 +109,9 @@ class FormEditor extends Component {
   handleDelete() {
     fetch('/api/forms/' + this.props.id, { method: 'DELETE' }).then(r => {
       if (r.ok) {
-        toastStub.success('表单已删除');
+        toast.success('表单已删除');
       } else {
-        toastStub.error('删除失败： ' + r.status + ' ' + r.statusText);
+        toast.error('删除失败： ' + r.status + ' ' + r.statusText);
         r.text().then(text => console.error(text));
       }
     });
@@ -130,9 +124,9 @@ class FormEditor extends Component {
     data.append('destination', JSON.stringify(this.state.destination || null));
     fetch('/api/forms/' + this.props.id, { method: 'PUT', body: data }).then(r => {
       if (r.ok) {
-        toastStub.success('已保存');
+        toast.success('已保存');
       } else {
-        toastStub.error('保存失败： ' + r.status + ' ' + r.statusText);
+        toast.error('保存失败： ' + r.status + ' ' + r.statusText);
         r.text().then(text => console.error(text));
       }
     });
