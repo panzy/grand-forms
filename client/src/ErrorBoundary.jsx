@@ -6,7 +6,7 @@ import { Alert } from 'react-bootstrap';
  *
  * @prop {string|number} contentVersion 发生变化时将清除之前的错误信息。
  */
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, message: null };

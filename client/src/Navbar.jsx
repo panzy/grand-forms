@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React  from 'react';
 
 /**
  * @prop {string} [title] brand text，缺省为应用程序的名称。

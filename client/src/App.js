@@ -1,20 +1,15 @@
 import React, { Component } from 'react';
 import {
   BrowserRouter as Router,
-  Route,
-  Link
+  Route
 } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import uuidv4 from 'uuid/v4';
 
-import logo from './logo.svg';
 import FormEditor from './FormEditor';
 import FormResponses from './FormResponses';
 import FormView from './FormView';
 import Navbar from './Navbar';
-import sampleFormData from './sampleFormData.json';
-import sampleFormSchema from './sampleFormSchema.json';
-import sampleFormUiSchema from './sampleFormUiSchema.json';
 import './App.css';
 
 class App extends Component {
