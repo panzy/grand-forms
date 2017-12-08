@@ -45,7 +45,7 @@ class FormEditor extends Component {
       schemaJson: null, // JSON
       uiSchemaJson: null, // JSON
       formData: null,
-      destination: null, // object
+      destination: {}, // object, will be passed to FormDestination, so must not be null.
     };
 
     this.handleSchemaChange = this.handleSchemaChange.bind(this);
