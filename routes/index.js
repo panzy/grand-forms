@@ -354,14 +354,6 @@ function handleFormGet(req, res) {
       // UI schema is optional
       res.send({schema});
     });
-
-    return readFile(uiSchemaFilename).then(uiSchemaBuf => {
-      var uiSchema = JSON.parse(uiSchemaBuf.toString());
-      res.send({schema, uiSchema});
-    }).catch(err => {
-      // UI schema is optional
-      res.send({schema});
-    });
   }).catch(err => {
     if (err.code === 'ENOENT') {
       res.status(404).send('找不到表单 ' + req.params.id);
