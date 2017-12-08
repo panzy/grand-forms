@@ -2,12 +2,11 @@ import React, { Component } from "react";
 import AceEditor from 'react-ace';
 import Form from "react-jsonschema-form";
 
-import { MenuItem, NavItem } from 'react-bootstrap';
+import { Alert, MenuItem, NavItem } from 'react-bootstrap';
 
 // tabs
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
-
 
 // AceEditor themes
 import brace from 'brace';
@@ -21,6 +20,7 @@ import ErrorBoundary from './ErrorBoundary';
 import FormDestination from './FormDestination';
 import FormEditable from './FormEditable';
 import Navbar from './Navbar';
+
 
 // react-toastify 似乎不兼容 react@16.
 const toastStub = {
@@ -41,6 +41,7 @@ class FormEditor extends Component {
 
     this.state = {
       contentVersion: 0, // +1 every time a change is made
+      lastErrMsg: null,
       loading: LOADING,
       schema: null, // object
       uiSchema: null, // object
@@ -93,11 +94,13 @@ class FormEditor extends Component {
 
   handleSchemaChange(value, event) {
     var schema = this.state.schema;
+    var lastErrMsg = null;
     try {
       schema = JSON.parse(value);
     } catch(err) {
+      lastErrMsg = err.message;
     }
-    this.setState({schema, schemaJson: value, contentVersion: this.state.contentVersion + 1});
+    this.setState({schema, schemaJson: value, lastErrMsg, contentVersion: this.state.contentVersion + 1});
   }
 
   handleUiSchemaChange(value, event) {
@@ -191,14 +194,16 @@ class FormEditor extends Component {
       //
       // 另外为了帮助 ErrorBoudary 从之前的错误中恢复，我们传个 contentVersion
       // 参数。
-      var preview = <ErrorBoundary contentVersion={this.state.contentVersion}>
-        <Form
-          schema={this.state.schema || {}}
-          uiSchema={this.state.uiSchema || {}}
-          formData={this.state.formData}
-          children={<span/>/* no default submit buttons */}
-        />
-      </ErrorBoundary>;
+      var preview = this.state.lastErrMsg ?
+        <Alert bsStyle='danger'>{this.state.lastErrMsg}</Alert> :
+        <ErrorBoundary contentVersion={this.state.contentVersion}>
+          <Form
+            schema={this.state.schema || {}}
+            uiSchema={this.state.uiSchema || {}}
+            formData={this.state.formData}
+            children={<span/>/* no default submit buttons */}
+          />
+        </ErrorBoundary>;
 
       var code = (
         <div>
