@@ -110,7 +110,7 @@ function Cell(props) {
       var m = value.match(/name=([^;]+);/);
       var filename = m ? m[1] : '';
       if (value.startsWith('data:image'))
-        mediaTag = <img className='attachment' src={value}/>;
+        mediaTag = <img className='attachment' src={value} alt='附件预览'/>;
       else if (value.startsWith('data:audio'))
         mediaTag = <audio className='attachment' src={value} controls="controls"/>;
       else if (value.startsWith('data:video'))
