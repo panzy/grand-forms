@@ -108,7 +108,7 @@ class FieldEditable extends Component {
             if (schema.type === 'number')
               return Number.parseFloat(s) || 0;
             else if (schema.type === 'integer')
-              return Number.parseInt(s) || 0;
+              return Number.parseInt(s, 10) || 0;
             else
               return s.trim();
           });
