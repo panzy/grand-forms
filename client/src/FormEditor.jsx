@@ -9,7 +9,7 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 
 // AceEditor themes
-import brace from 'brace';
+import 'brace';
 import 'brace/mode/json';
 import 'brace/theme/monokai';
 

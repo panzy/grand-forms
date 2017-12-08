@@ -133,7 +133,6 @@ class FormEditable extends Component {
   }
 
   render() {
-    var {schema} = this.props;
     var {uiSchema} = this.state;
 
     // 不要用 field name 作为 FieldEditable.key，以免 FieldEditable 在修改 name

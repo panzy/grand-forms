@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Alert, ControlLabel, FormControl, FormGroup, HelpBlock, Radio } from 'react-bootstrap';
+import { Alert, Radio } from 'react-bootstrap';
 import Form from "react-jsonschema-form";
 
 
@@ -152,16 +152,6 @@ class FormDestination extends Component {
     }
     fields.forEach(name => this[type + 'FormSchema'].properties[name].default = props.data[name]);
   }
-}
-
-function FieldGroup({ id, label, help, ...props }) {
-  return (
-    <FormGroup controlId={id}>
-      <ControlLabel>{label}</ControlLabel>
-      <FormControl {...props} />
-      {help && <HelpBlock>{help}</HelpBlock>}
-    </FormGroup>
-  );
 }
 
 export default FormDestination;

@@ -4,7 +4,6 @@ import {
   Route
 } from 'react-router-dom';
 import { NavItem } from 'react-bootstrap';
-import { ToastContainer, toast } from 'react-toastify';
 import uuidv4 from 'uuid/v4';
 
 import FormEditor from './FormEditor';
@@ -83,16 +82,6 @@ class App extends Component {
             }
           </ul>
         </div>
-
-        {/* XXX not rendered()? */}
-        <ToastContainer
-          position="top-center"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          pauseOnHover
-        />
       </div>
     );
   }
