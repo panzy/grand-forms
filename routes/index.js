@@ -53,40 +53,39 @@ function errorMessageOfResponse(r) {
  * list forms.
  */
 function handleFormIndexReq(req, res) {
-  fs.readdir(dataDir + 'forms/', (err, files) => {
-    if (err) {
-      res.status(500).send(err.message);
-    } else {
-      var readings = files.filter(name => /^[0-9a-zA-Z-_]+\.json$/.test(name))
-        .map(name => readFile(dataDir + 'forms/' + name).then(buf => {
-          var schema = JSON.parse(buf.toString());
-          return {
-            id: name.substr(0, name.length - 5),
-            title: schema.title,
+  return readdir(path.join(dataDir, 'forms')).then((files) => {
+    var readings = files.filter(name => /^[0-9a-zA-Z-_]+\.json$/.test(name))
+      .map(name => {
+        const id = name.substr(0, name.length - 5);
+        return readFormConfig(id).then(conf => {
+          if (conf.schema) {
+            return { id, title: conf.schema.title };
           }
-        }));
-      Promise.all(readings).then(forms => {
-        res.send(forms);
-      }).catch(err => {
-        logger.error(err);
-        res.status(500).send(err.message);
-      });
-    }
+          return null;
+        });
+      }).filter(f => f !== null);
+    return Promise.all(readings);
+  }).then(forms => {
+    res.send(forms);
+  }).catch(err => {
+    if (err.code === 'ENOENT') // empty result
+      res.send('[]');
+    else
+      res.status(500).send(err.message);
   });
 }
 
 function handleFormPut(req, res) {
-  // post schema
-
   var form = new multiparty.Form();
 
   form.parse(req, function(err, fields, files) {
     logger.debug('form editor post fields', fields);
 
-    // validate
+    // parse input
+    var formConf = {};
     if (fields.schema) {
       try {
-        JSON.parse(fields.schema[0]);
+        formConf.schema = JSON.parse(fields.schema[0]);
       } catch (err) {
         res.status(400).send('invalid schema: ' + err.message);
         return;
@@ -94,42 +93,31 @@ function handleFormPut(req, res) {
     }
     if (fields.uiSchema) {
       try {
-        JSON.parse(fields.uiSchema[0]);
+        formConf.uiSchema = JSON.parse(fields.uiSchema[0]);
       } catch (err) {
         res.status(400).send('invalid UI schema: ' + err.message);
         return;
       }
     }
+    if (fields.destination) {
+      try {
+        formConf.destination = JSON.parse(fields.destination[0]);
+      } catch (err) {
+        res.status(400).send('invalid destination: ' + err.message);
+        return;
+      }
+    }
 
     // save
-    if (fields.schema) {
-      var filename = dataDir + 'forms/' + req.params.id + '.json';
-      var data = fields.schema[0];
-      fs.writeFile(filename, data, (err) => {
-        if (err) {
-          logger.error(err);
-        }
-      });
-    }
-    if (fields.uiSchema) {
-      var filename = dataDir + 'forms/' + req.params.id + '.ui.json';
-      var data = fields.uiSchema[0];
-      fs.writeFile(filename, data, (err) => {
-        if (err) {
-          logger.error(err);
-        }
-      });
-    }
-    if (fields.destination) {
-      var filename = dataDir + 'forms/' + req.params.id + '.dest.json';
-      var data = fields.destination[0];
-      fs.writeFile(filename, data, (err) => {
-        if (err) {
-          logger.error(err);
-        }
-      });
-    }
-    res.send('ok');
+    mkdirpPromise(path.join(dataDir, 'forms')).then(dir => {
+      var filename = path.join(dataDir, 'forms', req.params.id + '.json');
+      return writeFile(filename, JSON.stringify(formConf, null, '  '));
+    }).then(() => {
+      res.status(204).end();
+    }).catch(err => {
+      logger.error(err);
+      res.status(500).send(err.message);
+    });
   });
 }
 
@@ -149,23 +137,10 @@ function handleFormPut(req, res) {
  * 其中 items 数组中的元素就是每次 POST 上来的 JSON 对象。
  */
 function handleFormRespReq(req, res) {
-  var schemaFilename = path.join(dataDir, 'forms', req.params.id +  '.json');
-  var readingSchema = readFile(schemaFilename).then(buf => {
-    return JSON.parse(buf.toString());
-  });
-
-  readingSchema.then(schema => {
+  readFormConfig(req.params.id).then(formConf => {
+    const schema = formConf.schema;
     var respDir = path.join(dataDir, 'responses', req.params.id);
-    var readingDir = new Promise((resolve, reject) => {
-      fs.readdir(respDir, (err, files) => {
-        if (err)
-          reject(err);
-        else
-          resolve(files);
-      });
-    });
-
-    return readingDir.then(files => {
+    return readdir(respDir).then(files => {
       var readingResps = files
         .filter((name, idx) => idx > files.length - 100 /* XXX 只显示最近 100 条 */
           && /^[0-9a-zA-Z-_]+\.json$/.test(name))
@@ -206,35 +181,27 @@ function handleFormDelete(req, res) {
   // 1. 允许撤销；
   // 2. 表单数据(responses)不应连带删除，而表单数据需要 schema；
   var trashDir = path.join(dataDir, 'forms', 'trash');
-  var schemaFile = path.join(dataDir, 'forms', req.params.id + '.json');
-  var schemaFileDel = path.join(trashDir, req.params.id + '.json');
-  var uiSchemaFile = path.join(dataDir, 'forms', req.params.id + '.ui.json');
-  var uiSchemaFileDel = path.join(trashDir, req.params.id + '.ui.json');
+  var confFile = path.join(dataDir, 'forms', req.params.id + '.json');
+  var confFileDel = path.join(trashDir, req.params.id + '.json');
 
-  mkdirp(trashDir, err => {
-    if (err) {
-      logger.error(err);
-      res.status(500).send(err.message);
-    } else {
-      // delete schema
-      fs.rename(schemaFile, schemaFileDel, (err) => {
+  mkdirpPromise(trashDir).then(() => {
+    // delete schema
+    return new Promise((resolve, reject) => {
+      fs.rename(confFile, confFileDel, (err) => {
         if (err) {
-          if (err.code === 'ENOENT') {
-            res.status(404).end();
-          } else {
-            res.status(500).send(err.message);
-          }
+          reject(err);
         } else {
-          res.status(204).end();
+          resolve();
         }
       });
-
-      // delete ui schema
-      fs.rename(uiSchemaFile, uiSchemaFileDel, (err) => {
-        if (err && err.code !== 'ENOENT') {
-          logger.error(err);
-        }
-      });
+    });
+  }).then(() => {
+    res.status(204).end();
+  }).catch(err => {
+    if (err.code === 'ENOENT') {
+      res.status(404).end();
+    } else {
+      res.status(500).send(err.message);
     }
   });
 }
@@ -248,7 +215,8 @@ function handleFormPost(req, res) {
   if (req.headers['content-type'] !== 'application/json') {
     res.status(400).send('invalid content-type, expect application/json, actual ' + req.headers['content-type'] + '.');
   } else {
-    readFormDestination(req.params.id, null).then(destination => {
+    readFormConfig(req.params.id, null).then(formConf => {
+      const {schema, destination} = formConf;
       return getRawBody(req, {
         length: req.headers['content-length'],
         limit: '20mb'
@@ -294,25 +262,23 @@ function handleFormPost(req, res) {
           });
         } else if (destination.type === 'db') {
           var data = JSON.parse(buf.toString());
-          return readFormSchema(req.params.id).then(schema => {
-            var grandFormsIoUrl = 'http://localhost:3002/api/submit';
-            return fetch(grandFormsIoUrl, {
-              method: 'POST',
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                schema,
-                destination,
-                data
-              })
-            }).then(r => {
-              if (r.ok) {
-                return r.status;
-              } else {
-                return errorMessageOfResponse(r);
-              }
-            });
+          var grandFormsIoUrl = 'http://localhost:3002/api/submit';
+          return fetch(grandFormsIoUrl, {
+            method: 'POST',
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              schema,
+              destination,
+              data
+            })
+          }).then(r => {
+            if (r.ok) {
+              return r.status;
+            } else {
+              return errorMessageOfResponse(r);
+            }
           });
         } else {
           throw new Error(`destination type of "${destination.type}" is not implemented.`);
@@ -336,24 +302,8 @@ function handleIndexReq(req, res) {
  */
 function handleFormGet(req, res) {
 
-  var schemaFilename = dataDir + `/forms/${req.params.id}.json`;
-  var uiSchemaFilename = dataDir + `/forms/${req.params.id}.ui.json`;
-  var destFilename = dataDir + `/forms/${req.params.id}.dest.json`;
-
-  readFile(schemaFilename).then(schemaBuf => {
-    var schema = JSON.parse(schemaBuf.toString());
-    var title = schema.title;
-    Promise.all([
-      readFile(uiSchemaFilename),
-      readFile(destFilename),
-    ]).then(bufs => {
-      var uiSchema = JSON.parse(bufs[0].toString());
-      var destination = JSON.parse(bufs[1].toString());
-      res.send({schema, uiSchema, destination});
-    }).catch(err => {
-      // UI schema is optional
-      res.send({schema});
-    });
+  readFormConfig(req.params.id).then(form => {
+    res.send(form);
   }).catch(err => {
     if (err.code === 'ENOENT') {
       res.status(404).send('找不到表单 ' + req.params.id);
@@ -380,20 +330,18 @@ function mkdirpPromise(dir) {
 }
 
 /**
- * read form destination configuration.
- *
- * @arg {string} id form id
- * @arg {object} [defaultValue]
- * @return {object} or null.
+ * Call fs.readdir and return a Promise.
+ * @return {Promise} resolve with File array.
  */
-function readFormDestination(id, defaultValue) {
-  var filename = dataDir + `/forms/${id}.dest.json`;
-  return readFile(filename)
-    .then(buf => JSON.parse(buf.toString()))
-    .catch(err => {
-      if (err.code === 'ENOENT' && typeof defaultValue !== 'undefined')
-        return defaultValue;
+function readdir(dir) {
+  return new Promise((resolve, reject) => {
+    fs.readdir(dir, (err, files) => {
+      if (err)
+        reject(err);
+      else
+        resolve(files);
     });
+  });
 }
 
 /**
@@ -402,7 +350,7 @@ function readFormDestination(id, defaultValue) {
  * @arg {string} id form id
  * @return {object} or null.
  */
-function readFormSchema(id) {
+function readFormConfig(id) {
   var filename = dataDir + `/forms/${id}.json`;
   return readFile(filename).then(buf => JSON.parse(buf.toString()));
 }
