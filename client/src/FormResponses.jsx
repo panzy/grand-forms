@@ -50,12 +50,12 @@ class FormResponses extends Component {
     } else if (this.state.loading === LOADED) {
       switch (this.state.schema.type) {
         case 'object': {
-          var tableHeaders = Array.prototype.concat.call([],
+          let tableHeaders = Array.prototype.concat.call([],
             <th key='__ts'>Time</th>,
             Object.entries(this.state.schema.properties).map(kv =>
               <th key={kv[0]}>{kv[1].title}</th>));
-          var tableRows = this.state.items.map((row, rowId) => {
-            var cells = Object.entries(this.state.schema.properties).map(kv => {
+          let tableRows = this.state.items.map((row, rowId) => {
+            let cells = Object.entries(this.state.schema.properties).map(kv => {
               const [key, {type, format}] = kv;
               return <Cell key={key} value={row[key]} type={type} format={format}/>;
             });
@@ -75,7 +75,7 @@ class FormResponses extends Component {
           break;
         }
         case 'string': {
-          var tableRows = this.state.items.map((value, rowId) => <tr key={rowId}><Cell value={value} type='string'/></tr>);
+          let tableRows = this.state.items.map((value, rowId) => <tr key={rowId}><Cell value={value} type='string'/></tr>);
           table = <table className='table responses'>
             <thead>
               <tr><th>值</th></tr>
