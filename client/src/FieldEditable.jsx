@@ -32,7 +32,14 @@ class FieldEditable extends Component {
     // 字段类型枚举
     // 这个列表是面向用户而非 JSONSchema 的，所以它并不一一对应于 JSONSchema
     // 中的 type 属性，事实上它与 type, format 属性，甚至 UI schema 都有关系。
-    this.types = ['string', 'number', 'integer', 'boolean', 'file', 'image', 'video'];
+    this.types = [
+      // real types
+      'string', 'number', 'integer', 'boolean',
+      // string with data-url format
+      'file', 'image', 'video',
+      // other formats of string type
+      'date', 'datetime', 'email',
+    ];
   }
 
   /**
@@ -48,6 +55,10 @@ class FieldEditable extends Component {
         if (uiOptions && /^video\//i.test(uiOptions.accept))
           return 'video';
         return 'file';
+      case 'date':
+      case 'datetime':
+      case 'email':
+        return format;
       default:
         return type;
     }
@@ -77,6 +88,12 @@ class FieldEditable extends Component {
         if (!uiSchema['ui:options'])
           uiSchema['ui:options'] = {};
         uiSchema['ui:options'].accept = t + '/*';
+        break;
+      case 'date':
+      case 'datetime':
+      case 'email':
+        schema.type = 'string';
+        schema.format = t;
         break;
       default:
         schema.type = t;
