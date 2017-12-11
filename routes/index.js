@@ -62,11 +62,14 @@ function handleFormIndexReq(req, res) {
             return { id, title: conf.schema.title };
           }
           return null;
+        }, err => {
+          logger.error('failed to read form config, ID', id, ', Error', err.message);
+          return null;
         });
-      }).filter(f => f !== null);
+      });
     return Promise.all(readings);
   }).then(forms => {
-    res.send(forms);
+    res.send(forms.filter(f => f !== null));
   }).catch(err => {
     if (err.code === 'ENOENT') // empty result
       res.send('[]');
