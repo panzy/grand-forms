@@ -76,49 +76,35 @@ function handleFormIndexReq(req, res) {
 }
 
 function handleFormPut(req, res) {
-  var form = new multiparty.Form();
 
-  form.parse(req, function(err, fields, files) {
-    logger.debug('form editor post fields', fields);
-
-    // parse input
-    var formConf = {};
-    if (fields.schema) {
+  res.setHeader('content-type', 'text/plain');
+  if (req.headers['content-type'] !== 'application/json') {
+    res.status(400).send('invalid content-type, expect application/json, actual ' + req.headers['content-type'] + '.');
+  } else {
+    return getRawBody(req, {
+      length: req.headers['content-length'],
+      limit: '20mb'
+    }).then(buf => {
+      // validate
       try {
-        formConf.schema = JSON.parse(fields.schema[0]);
+        JSON.parse(buf.toString());
       } catch (err) {
-        res.status(400).send('invalid schema: ' + err.message);
+        res.status(400).send('bad JSON: ' + err.message);
         return;
       }
-    }
-    if (fields.uiSchema) {
-      try {
-        formConf.uiSchema = JSON.parse(fields.uiSchema[0]);
-      } catch (err) {
-        res.status(400).send('invalid UI schema: ' + err.message);
-        return;
-      }
-    }
-    if (fields.destination) {
-      try {
-        formConf.destination = JSON.parse(fields.destination[0]);
-      } catch (err) {
-        res.status(400).send('invalid destination: ' + err.message);
-        return;
-      }
-    }
 
-    // save
-    mkdirpPromise(path.join(dataDir, 'forms')).then(dir => {
-      var filename = path.join(dataDir, 'forms', req.params.id + '.json');
-      return writeFile(filename, JSON.stringify(formConf, null, '  '));
-    }).then(() => {
-      res.status(204).end();
-    }).catch(err => {
-      logger.error(err);
-      res.status(500).send(err.message);
+      // save
+      mkdirpPromise(path.join(dataDir, 'forms')).then(dir => {
+        var filename = path.join(dataDir, 'forms', req.params.id + '.json');
+        return writeFile(filename, buf);
+      }).then(() => {
+        res.status(204).end();
+      }).catch(err => {
+        logger.error(err);
+        res.status(500).send(err.message);
+      });
     });
-  });
+  }
 }
 
 /**

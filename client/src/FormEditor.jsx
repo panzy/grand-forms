@@ -118,11 +118,19 @@ class FormEditor extends Component {
   }
 
   handleSubmit(event) {
-    var data = new FormData();
-    data.append('schema', this.state.schemaJson || 'null');
-    data.append('uiSchema', this.state.uiSchemaJson || 'null');
-    data.append('destination', JSON.stringify(this.state.destination || null));
-    fetch('/api/forms/' + this.props.id, { method: 'PUT', body: data }).then(r => {
+    var body = {
+      'schema': this.state.schema || {},
+      'uiSchema': this.state.uiSchema || {},
+      'destination': this.state.destination || null,
+    };
+    var headers = new Headers({
+      "Content-Type": "application/json",
+    });
+    fetch('/api/forms/' + this.props.id, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(body, null, '  ')
+    }).then(r => {
       if (r.ok) {
         toast.success('已保存');
       } else {
