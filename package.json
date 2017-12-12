@@ -10,6 +10,8 @@
   "author": "pan.zhiyong@grandlynn.com",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.18.2",
+    "bodyparser-json-error": "^1.0.0",
     "express": "^4.13.4",
     "express-minify": "^0.2.0",
     "express-session": "^1.14.2",
@@ -17,6 +19,7 @@
     "fs": "0.0.1-security",
     "fs-readfile-promise": "^3.0.0",
     "logger": "git+https://github.com/panzy/node-logger.git",
+    "md5": "^2.2.1",
     "method-override": "^2.3.6",
     "mkdirp": "^0.5.1",
     "morgan": "^1.7.0",

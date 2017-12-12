@@ -6,6 +6,8 @@ import {
 import { NavItem } from 'react-bootstrap';
 import uuidv4 from 'uuid/v4';
 
+import { ToastContainer, toast } from 'react-toastify';
+
 import FormEditor from './FormEditor';
 import FormResponses from './FormResponses';
 import FormView from './FormView';
@@ -17,7 +19,11 @@ class App extends Component {
     super(props);
 
     this.state = {
-      forms: []
+      me: undefined, // my profile
+      forms: [],
+      formTitle: undefined, // current form title
+      formActions: [], // actions for current form
+      formMoreActions: [], // more actions for current form
     };
 
     this.renderFormIndex = this.renderFormIndex.bind(this);
@@ -29,7 +35,62 @@ class App extends Component {
   }
 
   componentDidMount() {
-    fetch('/api/forms').then(r => {
+    fetch('/api/whoami', { credentials: 'same-origin' }).then(r => {
+      if (r.ok)
+        r.json().then(profile => {
+          this.setState({me: profile});
+        });
+    });
+
+    this.refreshForms();
+  }
+
+  onCreateForm() {
+    window.location = '/forms/' + uuidv4() + '?new=1';
+  }
+
+  onLogin = (uid, passwd) => {
+    fetch('/api/login', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: new Headers({'content-type': 'application/json'}),
+      body: JSON.stringify({uid, passwd})
+    }).then(r => {
+      if (r.ok) {
+        return r.json().then(data => {
+          if (data.err) {
+            toast.error(data.err);
+          } else {
+            this.setState({me: data});
+            this.refreshForms();
+          }
+        });
+      } else {
+        throw new Error('HTTP ' + r.status + r.statusText);
+      }
+    }).catch(err => {
+      toast.danger(err.message);
+    });
+  }
+
+  onLogout = () => {
+    fetch('/api/logout', {
+      method: 'POST',
+      credentials: 'same-origin'
+    }).then(r => {
+      if (r.ok) {
+        this.setState({me: undefined});
+        this.refreshForms();
+      } else {
+        throw new Error('HTTP ' + r.status + r.statusText);
+      }
+    }).catch(err => {
+      toast.danger(err.message);
+    });
+  }
+
+  refreshForms() {
+    fetch('/api/forms', { credentials: 'same-origin' }).then(r => {
       if (r.ok) {
         return r.json().then(forms => {
           this.setState({forms});
@@ -42,45 +103,73 @@ class App extends Component {
     });
   }
 
-  onCreateForm() {
-    window.location = '/forms/' + uuidv4() + '?new=1';
-  }
-
   render() {
-    return <Router>
-      <div>
-        <Route exact path="/" component={this.renderFormIndex}/>
-        <Route exact path="/forms/:id" component={this.renderFormEditor}/>
-        <Route path="/forms/:id/view" component={this.renderFormView}/>
-        <Route path="/forms/:id/resp" component={this.renderFormResponses}/>
-      </div>
-    </Router>
+    return <div>
+      <Router>
+        <div>
+          <Route exact path="/" component={this.renderFormIndex}/>
+          <Route exact path="/forms/:id" component={this.renderFormEditor}/>
+          <Route path="/forms/:id/view" component={this.renderFormView}/>
+          <Route path="/forms/:id/resp" component={this.renderFormResponses}/>
+        </div>
+      </Router>
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnHover
+      />
+    </div>;
   }
 
   renderFormEditor({match}) {
-    return <FormEditor id={match.params.id}/>;
+    return <div>
+      <Navbar
+        title={this.state.formTitle || match.params.id}
+        backTitle='返回所有表单'
+        backUrl='/'
+        me={this.state.me && this.state.me.uid ? this.state.me : undefined}
+        actions={this.state.formActions}
+        moreActions={this.state.formMoreActions}
+        onLogin={this.onLogin}
+        onLogout={this.onLogout}
+      />
+      <FormEditor id={match.params.id} customNavbar={this.onCustomFormNavbar}/>
+    </div>;
   }
 
   renderFormIndex() {
     return (
       <div>
         <Navbar
+          me={this.state.me && this.state.me.uid ? this.state.me : undefined}
           actions={
               <NavItem href='#' onClick={this.onCreateForm}>创建表单</NavItem>
           }
+          onLogin={this.onLogin}
+          onLogout={this.onLogout}
         />
 
         <div className='container'>
           <h2>所有表单</h2>
-          <ul className='forms'>
-            {
-              this.state.forms.map(f =>
-                <li key={f.id}>
-                  <a className='edit' href={'/forms/' + f.id}>{f.title}</a>
-                </li>
-              )
-            }
-          </ul>
+          {this.state.forms.length && this.state.forms.length > 0 ?
+            <ul className='forms'>
+              {
+                this.state.forms.map(f =>
+                  <li key={f.id}>
+                    <a className='edit' href={'/forms/' + f.id}>{f.title}</a>
+                    {this.state.me && this.state.me.group === 'admin' ?
+                      <small>&nbsp;by {f.owner || '(公共)'}</small> :
+                      null
+                    }
+                  </li>
+                )
+              }
+            </ul> :
+            <div className='empty-form-list'>（这里是空的）</div>
+          }
         </div>
       </div>
     );
@@ -92,6 +181,10 @@ class App extends Component {
 
   renderFormView({match}) {
     return <FormView id={match.params.id} />;
+  }
+
+  onCustomFormNavbar = (formTitle, formActions, formMoreActions) => {
+    this.setState({formTitle, formActions, formMoreActions});
   }
 }
 

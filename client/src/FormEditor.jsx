@@ -19,7 +19,6 @@ import 'react-toastify/dist/ReactToastify.min.css';
 import ErrorBoundary from './ErrorBoundary';
 import FormDestination from './FormDestination';
 import FormEditable from './FormEditable';
-import Navbar from './Navbar';
 
 
 const LOADING = 0;
@@ -28,6 +27,7 @@ const LOAD_FAILED = 2;
 
 /**
  * @prop {string} id
+ * @prop {function} customNavbar (title, actions: NavItem[], moreActions: MenuItem[])
  */
 class FormEditor extends Component {
   constructor(props) {
@@ -52,6 +52,10 @@ class FormEditor extends Component {
     this.onFormEditableChange = this.onFormEditableChange.bind(this);
   }
 
+  componentWillMount() {
+    this.customNavbar();
+  }
+
   componentDidMount() {
     if (window.location.search.indexOf('new=1') !== -1) {
       this.setState({
@@ -60,10 +64,10 @@ class FormEditor extends Component {
         schemaJson: '{}',
         uiSchemaJson: '{}',
         loading: LOADED,
-      });
+      }, this.customNavbar);
     } else {
       this.setState({loading: LOADING});
-      fetch('/api/forms/' + this.props.id).then(r => {
+      fetch('/api/forms/' + this.props.id, { credentials: 'same-origin' }).then(r => {
         if (r.ok) {
           return r.json().then(form => {
             this.setState({
@@ -73,7 +77,7 @@ class FormEditor extends Component {
               schemaJson: JSON.stringify(form.schema, null, "  "),
               uiSchemaJson: JSON.stringify(form.uiSchema, null, "  "),
               loading: LOADED,
-            });
+            }, this.customNavbar);
           });
         } else {
           return Promise.reject(new Error('加载表单数据失败：HTTP ' + r.status + ' ' + r.statusText));
@@ -83,6 +87,27 @@ class FormEditor extends Component {
         alert(err.message);
         this.setState({loading: LOAD_FAILED});
       });
+    }
+  }
+
+  customNavbar() {
+    if (this.state.loading === LOADING) {
+      this.props.customNavbar(undefined, [], []);
+    } else if (this.state.loading === LOAD_FAILED) {
+      this.props.customNavbar(undefined, [], []);
+    } else if (this.state.loading === LOADED) {
+      var viewUrl = '/forms/' + this.props.id + '/view';
+      var respUrl = '/forms/' + this.props.id + '/resp';
+
+      this.props.customNavbar(
+        this.state.schema && this.state.schema.title ? this.state.schema.title : '未命名表单',
+        [ <NavItem key='save' onClick={this.handleSubmit}>保存</NavItem> ],
+        [
+          <MenuItem key='view' href={viewUrl} target='_blank'>使用表单</MenuItem>,
+          <MenuItem key='resp' href={respUrl} target='_blank'>查看数据</MenuItem>,
+          <MenuItem key='div' divider />,
+          <MenuItem key='delete' onClick={this.handleDelete}>删除表单</MenuItem>,
+        ]);
     }
   }
 
@@ -107,7 +132,10 @@ class FormEditor extends Component {
   }
 
   handleDelete() {
-    fetch('/api/forms/' + this.props.id, { method: 'DELETE' }).then(r => {
+    fetch('/api/forms/' + this.props.id, {
+      method: 'DELETE',
+      credentials: 'same-origin'
+    }).then(r => {
       if (r.ok) {
         toast.success('表单已删除');
       } else {
@@ -128,6 +156,7 @@ class FormEditor extends Component {
     });
     fetch('/api/forms/' + this.props.id, {
       method: 'PUT',
+      credentials: 'same-origin',
       headers,
       body: JSON.stringify(body, null, '  ')
     }).then(r => {
@@ -155,36 +184,13 @@ class FormEditor extends Component {
 
   render() {
 
-    var navbar, body;
+    var body;
 
     if (this.state.loading === LOADING) {
-      navbar = <Navbar/>;
-      body = <div className='alert alert-info'>正在加载表单...</div>;
+      body = <div className='container'><Alert>正在加载表单...</Alert></div>;
     } else if (this.state.loading === LOAD_FAILED) {
-      navbar = <Navbar/>;
-      body = <div className='alert alert-danger'>加载表单失败</div>;
+      body = <div className='container'><Alert bsStyle='danger'>加载表单失败</Alert></div>;
     } else if (this.state.loading === LOADED) {
-
-      var viewUrl = '/forms/' + this.props.id + '/view';
-      var respUrl = '/forms/' + this.props.id + '/resp';
-
-      navbar = (
-        <Navbar
-          title={this.state.schema && this.state.schema.title ? this.state.schema.title : '未命名表单'}
-          backUrl='/'
-          backTitle='返回所有表单'
-          actions={[
-            <NavItem key='save' onClick={this.handleSubmit}>保存</NavItem>,
-          ]}
-          moreActions={[
-            <MenuItem key='view' href={viewUrl} target='_blank'>使用表单</MenuItem>,
-            <MenuItem key='resp' href={respUrl} target='_blank'>查看数据</MenuItem>,
-            <MenuItem key='div' divider />,
-            <MenuItem key='delete' onClick={this.handleDelete}>删除表单</MenuItem>,
-          ]}
-        />
-      );
-
       // 由于预览是实时渲染的，难免遇到非法的schema（尽管它是合法的JSON）。
       // 例如，假设用户希望键入
       //    "format": "date"
@@ -303,7 +309,6 @@ class FormEditor extends Component {
 
     return (
       <div> 
-        {navbar}
         {body}
       </div>
     );
