@@ -95,7 +95,9 @@ class FormResponses extends Component {
       <Navbar
         title={this.state.schema && this.state.schema.title ? this.state.schema.title : '未命名表单'}
         subTitle='采集的数据'/>
-      {table}
+      <div className='container'>
+        {table}
+      </div>
     </div>;
   }
 }
