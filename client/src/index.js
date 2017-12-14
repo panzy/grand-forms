@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import FormResponses from './FormResponses';
 import FormView from './FormView';
-import registerServiceWorker from './registerServiceWorker';
+//import registerServiceWorker from './registerServiceWorker';
 
 var m = null;//window.location.pathname.match(/^\/forms\/(\w+)(?:\/(view|resp))?/);
 if (m) {
@@ -45,7 +45,7 @@ if (m) {
   }
 } else {
   ReactDOM.render(<App />, document.getElementById('root'));
-  registerServiceWorker();
+  //registerServiceWorker();
 
   // Implementing the HMR Interface.
   if (module.hot) {

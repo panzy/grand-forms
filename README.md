@@ -27,16 +27,6 @@ web 前端是一个 CRA (Create React App) 程序，全部是静态文件，所�
       server_name  forms.grandlynn.com;
       root /opt/workspace/grand-forms/client/build;
 
-      ssl                  on;
-      ssl_certificate      /etc/nginx/cert.pem;
-      ssl_certificate_key  /etc/nginx/cert.key;
-
-      ssl_session_timeout  5m;
-
-      ssl_protocols  SSLv2 SSLv3 TLSv1;
-      ssl_ciphers  HIGH:!aNULL:!MD5;
-      ssl_prefer_server_ciphers   on;
-
       location / {
           try_files $uri /index.html;
           add_header   Cache-Control public;
@@ -54,4 +44,4 @@ web 前端是一个 CRA (Create React App) 程序，全部是静态文件，所�
 以上 Nginx 配置中的几个要点：
 
 1. 需要把 API 请求（路径模式为 /api/） proxy\_pass 到后端；
-2. 需要开启 SSL，这是浏览器的 Service Worker 要求的；
+2. 如果没有从 CRA src/index.js 中移除 registerServiceWorker()，则需要开启 SSL；
