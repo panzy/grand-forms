@@ -232,7 +232,7 @@ function handleFormPost(req, res) {
   if (req.headers['content-type'] !== 'application/json') {
     res.status(400).send('invalid content-type, expect application/json, actual ' + req.headers['content-type'] + '.');
   } else {
-    readFormConfig(req.params.id, null).then(formConf => {
+    readFormConfig(req.params.id).then(formConf => {
       const {schema, destination} = formConf;
       return getRawBody(req, {
         length: req.headers['content-length'],
@@ -240,7 +240,7 @@ function handleFormPost(req, res) {
       }).then(buf => {
         logger.debug('post form data:', buf);
 
-        if (!destination || destination.type === 'default') {
+        if (!destination || !destination.type || destination.type === 'default') {
           var outputDir = path.join(dataDir, 'responses', req.params.id);
           var filename = new Date().getTime() + '_' + uuidv4().substr(0, 4) + '.json';
           var outputPath = path.join(outputDir, filename);
