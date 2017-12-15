@@ -15,6 +15,8 @@ import FormView from './FormView';
 import Navbar from './Navbar';
 import './App.css';
 
+const BASENAME = '/grand-forms';
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -36,7 +38,7 @@ class App extends Component {
   }
 
   componentDidMount() {
-    fetch('/api/whoami', { credentials: 'same-origin' }).then(r => {
+    fetch(BASENAME + '/api/whoami', { credentials: 'same-origin' }).then(r => {
       if (r.ok)
         r.json().then(profile => {
           this.setState({me: profile});
@@ -47,7 +49,7 @@ class App extends Component {
   }
 
   onCreateForm() {
-    window.location = '/forms/' + uuidv4() + '?new=1';
+    window.location = BASENAME + '/forms/' + uuidv4() + '?new=1';
   }
 
   onLogin = (uid, passwd) => {
@@ -91,7 +93,7 @@ class App extends Component {
   }
 
   refreshForms() {
-    fetch('/api/forms', { credentials: 'same-origin' }).then(r => {
+    fetch(BASENAME + '/api/forms', { credentials: 'same-origin' }).then(r => {
       if (r.ok) {
         return r.json().then(forms => {
           this.setState({forms});
@@ -106,7 +108,7 @@ class App extends Component {
 
   render() {
     return <div>
-      <Router>
+      <Router basename={BASENAME}>
         <Switch>
           <Route exact path="/" component={this.renderFormIndex}/>
           <Route exact path="/forms/:id" component={this.renderFormEditor}/>
@@ -131,14 +133,14 @@ class App extends Component {
       <Navbar
         title={this.state.formTitle || match.params.id}
         backTitle='返回所有表单'
-        backUrl='/'
+        backUrl={BASENAME + '/'}
         me={this.state.me && this.state.me.uid ? this.state.me : undefined}
         actions={this.state.formActions}
         moreActions={this.state.formMoreActions}
         onLogin={this.onLogin}
         onLogout={this.onLogout}
       />
-      <FormEditor id={match.params.id} customNavbar={this.onCustomFormNavbar}/>
+      <FormEditor id={match.params.id} customNavbar={this.onCustomFormNavbar} basename={BASENAME}/>
     </div>;
   }
 
@@ -161,7 +163,7 @@ class App extends Component {
               {
                 this.state.forms.map(f =>
                   <li key={f.id}>
-                    <a className='edit' href={'/forms/' + f.id}>{f.title}</a>
+                    <a className='edit' href={BASENAME + '/forms/' + f.id}>{f.title}</a>
                     {this.state.me && this.state.me.group === 'admin' ?
                       <small>&nbsp;by {f.owner || '(公共)'}</small> :
                       null
@@ -178,11 +180,11 @@ class App extends Component {
   }
 
   renderFormResponses({match}) {
-    return <FormResponses id={match.params.id}/>;
+    return <FormResponses id={match.params.id} basename={BASENAME}/>;
   }
 
   renderFormView({match}) {
-    return <FormView id={match.params.id} />;
+    return <FormView id={match.params.id} basename={BASENAME}/>;
   }
 
   onCustomFormNavbar = (formTitle, formActions, formMoreActions) => {

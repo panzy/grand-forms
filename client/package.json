@@ -2,6 +2,7 @@
   "name": "grand-forms",
   "version": "0.1.0",
   "private": true,
+  "homepage": "http://grandlynn.com/grand-forms",
   "dependencies": {
     "react": "^16.1.1",
     "react-dom": "^16.1.1",
@@ -13,7 +14,14 @@
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://localhost:3001",
+  "proxy": {
+    "/grand-forms/api/*": {
+      "target": "http://localhost:3001/",
+      "pathRewrite": {
+        "/grand-forms": ""
+      }
+    }
+  },
   "devDependencies": {
     "classnames": "^2.2.5",
     "moment": "^2.19.2",

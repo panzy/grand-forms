@@ -67,7 +67,7 @@ class FormEditor extends Component {
       }, this.customNavbar);
     } else {
       this.setState({loading: LOADING});
-      fetch('/api/forms/' + this.props.id, { credentials: 'same-origin' }).then(r => {
+      fetch(this.props.basename + '/api/forms/' + this.props.id, { credentials: 'same-origin' }).then(r => {
         if (r.ok) {
           return r.json().then(form => {
             this.setState({
@@ -96,8 +96,8 @@ class FormEditor extends Component {
     } else if (this.state.loading === LOAD_FAILED) {
       this.props.customNavbar(undefined, [], []);
     } else if (this.state.loading === LOADED) {
-      var viewUrl = '/forms/' + this.props.id + '/view';
-      var respUrl = '/forms/' + this.props.id + '/resp';
+      var viewUrl = this.props.basename + '/forms/' + this.props.id + '/view';
+      var respUrl = this.props.basename + '/forms/' + this.props.id + '/resp';
 
       this.props.customNavbar(
         this.state.schema && this.state.schema.title ? this.state.schema.title : '未命名表单',
@@ -132,7 +132,7 @@ class FormEditor extends Component {
   }
 
   handleDelete() {
-    fetch('/api/forms/' + this.props.id, {
+    fetch(this.props.basename + '/api/forms/' + this.props.id, {
       method: 'DELETE',
       credentials: 'same-origin'
     }).then(r => {
@@ -154,7 +154,7 @@ class FormEditor extends Component {
     var headers = new Headers({
       "Content-Type": "application/json",
     });
-    fetch('/api/forms/' + this.props.id, {
+    fetch(this.props.basename + '/api/forms/' + this.props.id, {
       method: 'PUT',
       credentials: 'same-origin',
       headers,

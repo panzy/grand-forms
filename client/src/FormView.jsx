@@ -37,7 +37,7 @@ class FormView extends Component {
       });
     } else {
       this.setState({loading: LOADING});
-      fetch('/api/forms/' + this.props.id, { credentials: 'same-origin' }).then(r => {
+      fetch(this.props.basename + '/api/forms/' + this.props.id, { credentials: 'same-origin' }).then(r => {
         if (r.ok) {
           return r.json().then(form => {
             document.title = form.schema.title;
@@ -61,7 +61,7 @@ class FormView extends Component {
   }
 
   handleSubmit(event) {
-    var url = '/api/forms/' + this.props.id;
+    var url = this.props.basename + '/api/forms/' + this.props.id;
     fetch(url, {
       method: 'POST',
       credentials: 'same-origin',

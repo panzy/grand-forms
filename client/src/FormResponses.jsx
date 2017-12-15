@@ -23,7 +23,7 @@ class FormResponses extends Component {
 
   componentDidMount() {
     this.setState({loading: LOADING});
-    fetch('/api/forms/' + this.props.id + '/resp').then(r => {
+    fetch(this.props.basename + '/api/forms/' + this.props.id + '/resp').then(r => {
       if (r.ok) {
         r.json().then(data => {
           if (data.schema && data.schema.title)

@@ -5,7 +5,7 @@ const path = require('path');
 const readFile = require('fs-readfile-promise');
 const { URL } = require('url');
 
-const HOMEPAGE = 'http://localhost:3000';
+const HOMEPAGE = 'http://localhost/grand-forms';
 
 describe('Build', () => {
 
