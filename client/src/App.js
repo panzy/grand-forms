@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import {
   BrowserRouter as Router,
-  Route
+  Route,
+  Switch
 } from 'react-router-dom';
 import { NavItem } from 'react-bootstrap';
 import uuidv4 from 'uuid/v4';
@@ -106,12 +107,13 @@ class App extends Component {
   render() {
     return <div>
       <Router>
-        <div>
+        <Switch>
           <Route exact path="/" component={this.renderFormIndex}/>
           <Route exact path="/forms/:id" component={this.renderFormEditor}/>
           <Route path="/forms/:id/view" component={this.renderFormView}/>
           <Route path="/forms/:id/resp" component={this.renderFormResponses}/>
-        </div>
+          <Route component={NoMatch}/>
+        </Switch>
       </Router>
       <ToastContainer
         position="top-center"
@@ -187,5 +189,14 @@ class App extends Component {
     this.setState({formTitle, formActions, formMoreActions});
   }
 }
+
+/**
+ * No Match (404) component.
+ */
+const NoMatch = ({ location }) => (
+  <div>
+    <h3>No match for <code>{location.pathname}</code></h3>
+  </div>
+)
 
 export default App;
