@@ -6,6 +6,7 @@ const express = require('express');
 var minify = require('express-minify');
 const app = express();
 const logger = require('logger').createLogger();
+const path = require('path');
 
 ////////////////////////////////////////////////////////////////////////////////
 // app variables
@@ -39,7 +40,7 @@ if (process.env.NO_MINIFY !== 'true') {
 }
 
 // 静态目录指向 client 子工程的 webpack build。
-app.use(express.static(__dirname + '/client/build'));
+app.use(express.static(path.join(__dirname, 'client', 'build')));
 app.use(require('morgan')('dev'));
 app.use(require('method-override')());
 
@@ -55,8 +56,22 @@ var session = Session({
 app.set('trust proxy', 1) // trust first proxy
 app.use(session);
 
+//
 // routes
+//
 app.use('/', require('./routes/index'));
+// 由于采用了 Client-Side Routing，
+// 对于符合以下条件的 URI，总是应答 index.html：
+// A. 不是静态文件，且
+// B. 不是 API
+app.get(/^(?!api\/)/, function (req, res) {
+  // 访问不存在的 API 时，路由会进入这里，这时我们
+  // 不想返回 index.html，而是 HTTP 404。
+  if (req.path.startsWith('/api')) {
+    return res.sendStatus(404);
+  }
+  res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
+});
 
 app.onSocketioAttached = (io) => {
 };
