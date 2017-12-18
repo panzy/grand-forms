@@ -91,11 +91,8 @@ location /grand-forms {
 #
 # 由于 Grand Froms 采用了 Client-Side Routing，
 # 对于所有 uri，除非对应的文件存在，否则总是应答 index.html 。
-location ~ ^/grand-forms/(?!(api|index.html)) {
-    try_files $uri @rewrite_to_gf_index;
-}
-location @rewrite_to_gf_index {
-    rewrite ^ /grand-forms/index.html last;
+location ~ ^/grand-forms/(?!api) {
+    try_files $uri /grand-forms/index.html;
 }
 
 # Grand Forms backend
