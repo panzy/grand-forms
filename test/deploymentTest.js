@@ -47,6 +47,17 @@ describe('Build', () => {
             done();
           }).catch(done);
         });
+
+        it(`check ${HOMEPAGE}/manifest.json`, (done) => {
+          fetch(`${HOMEPAGE}/manifest.json`).then(r => {
+            assert.ok(r.ok, 'HTTP ' + r.status);
+            assert.equal(r.headers.get('content-type').split(';')[0], 'application/json');
+            return r.json().then(d => {
+              assert.equal(d.name, 'Grand Forms');
+              done();
+            });
+          }).catch(done);
+        });
       });
 
       describe('HTTP server (backend)', () => {
