@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 const readFile = require('fs-readfile-promise');
-const { URL } = require('url');
+const url = require('url');
 
 const HOMEPAGE = 'http://localhost/grand-forms';
 
@@ -34,7 +34,8 @@ describe('Build', () => {
 
         var bundleJsUrl;
         if (bundleJsUri.startsWith('/')) {
-          bundleJsUrl = new URL(HOMEPAGE).origin + bundleJsUri;
+          var u = url.parse(HOMEPAGE);
+          bundleJsUrl = u.protocol + '//' + u.host + bundleJsUri;
         } else {
           bundleJsUrl = HOMEPAGE + bundleJsUri;
         }
