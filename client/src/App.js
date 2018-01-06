@@ -72,7 +72,7 @@ class App extends Component {
         throw new Error('HTTP ' + r.status + r.statusText);
       }
     }).catch(err => {
-      toast.danger(err.message);
+      toast.error(err.message);
     });
   }
 
@@ -88,7 +88,7 @@ class App extends Component {
         throw new Error('HTTP ' + r.status + r.statusText);
       }
     }).catch(err => {
-      toast.danger(err.message);
+      toast.error(err.message);
     });
   }
 
