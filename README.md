@@ -77,29 +77,23 @@ Nginx 配置示例：
 # 部署到相对路径 /grand-forms，因此 Grand Forms 的首页地址为
 # http://mywebsite.com/grand-forms/
 
+# Grand Forms backend
+location /grand-forms/api/ {
+    proxy_pass http://localhost:3003/api/;
+    include proxy.conf;
+}
+
 # 静态文件，就是 client/build 目录中的内容。
 # 如果 client/build 已经复制到当前 nginx server root 下面的 grand-forms
 # 目录，则此 location 指令可以省略。
 location /grand-forms {
-    # there's a link in /var/www/html:
-    # grand-forms -> /opt/workspace/grand-forms/client/build
-    root /var/www/html;
-    index  index.html;
-}
-
-# rewrite all to index.html
-#
-# 由于 Grand Froms 采用了 Client-Side Routing，
-# 对于所有 uri，除非对应的文件存在，否则总是应答 index.html 。
-location ~ ^/grand-forms/(?!api) {
+    root /var/www/html/;
+    index index.html;
+    # 由于 Grand Froms 采用了 Client-Side Routing，
+    # 对于所有 uri，除非对应的文件存在，否则总是应答 index.html 。
     try_files $uri /grand-forms/index.html;
 }
 
-# Grand Forms backend
-location /grand-forms/api/ {
-    proxy_pass http://localhost:3001/api/;
-    include proxy.conf;
-}
 ```
 
 ### 测试
