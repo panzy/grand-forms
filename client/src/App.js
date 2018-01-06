@@ -53,7 +53,7 @@ class App extends Component {
   }
 
   onLogin = (uid, passwd) => {
-    fetch('/api/login', {
+    fetch(BASENAME + '/api/login', {
       method: 'POST',
       credentials: 'same-origin',
       headers: new Headers({'content-type': 'application/json'}),
@@ -77,7 +77,7 @@ class App extends Component {
   }
 
   onLogout = () => {
-    fetch('/api/logout', {
+    fetch(BASENAME + '/api/logout', {
       method: 'POST',
       credentials: 'same-origin'
     }).then(r => {
