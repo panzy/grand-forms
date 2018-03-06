@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Helmet } from 'react-helmet';
 import {
   BrowserRouter as Router,
   Route,
@@ -130,6 +131,7 @@ class App extends Component {
 
   renderFormEditor({match}) {
     return <div>
+      <IndexManifest/>
       <Navbar
         title={this.state.formTitle || match.params.id}
         backTitle='返回所有表单'
@@ -147,6 +149,7 @@ class App extends Component {
   renderFormIndex() {
     return (
       <div>
+        <IndexManifest/>
         <Navbar
           me={this.state.me && this.state.me.uid ? this.state.me : undefined}
           actions={
@@ -180,17 +183,47 @@ class App extends Component {
   }
 
   renderFormResponses({match}) {
-    return <FormResponses id={match.params.id} basename={BASENAME}/>;
+    return <div>
+      <IndexManifest/>
+      <FormResponses id={match.params.id} basename={BASENAME}/>
+    </div>;
   }
 
   renderFormView({match}) {
-    return <FormView id={match.params.id} basename={BASENAME}/>;
+    return <div>
+      <FormManifest id={match.params.id}/>
+      <FormView id={match.params.id} basename={BASENAME}/>
+    </div>;
   }
 
   onCustomFormNavbar = (formTitle, formActions, formMoreActions) => {
     this.setState({formTitle, formActions, formMoreActions});
   }
 }
+
+/**
+ * 设置 manifest meta，用于把 index page 安装到 Android homescreen.
+ *
+ * XXX: 由于 $BASENAME 的存在，dev server 无法正确处理 manifest.json 的 URL，
+ * 也即测试环境中的浏览器无法访问到 manifest.json 资源，但是对于编译并部署的程序
+ * 来说是没有问题的。
+ */
+const IndexManifest = () => (
+  <Helmet>
+    <link rel="manifest" href={`${BASENAME}/manifest.json`} />
+  </Helmet>
+)
+
+/**
+ * 设置 manifest meta，用于把 form page 安装到 Android homescreen.
+ *
+ * 由于这个 manifest.json 包含特定 form 的内容，它是由服务端动态生成的。
+ */
+const FormManifest = ({id}) => (
+  <Helmet>
+    <link rel="manifest" href={`${BASENAME}/api/forms/${id}/manifest?basename=/grand-forms`} />
+  </Helmet>
+)
 
 /**
  * No Match (404) component.

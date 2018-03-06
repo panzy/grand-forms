@@ -37,6 +37,7 @@ router.get('/api/forms/:id', handleFormGet);
 router.delete('/api/forms/:id', handleFormDelete);
 router.post('/api/forms/:id', handleFormPost);
 router.put('/api/forms/:id', handleFormPut);
+router.get('/api/forms/:id/manifest', handleFormManifestReq);
 router.get('/api/forms/:id/resp', handleFormRespReq);
 router.get('/api/whoami', handleWhoamiReq);
 
@@ -136,6 +137,30 @@ function handleFormPut(req, res) {
       res.status(err.httpStatus || 500).send(err.message);
     });
   }
+}
+
+/**
+ * 获取表单页面的 manifest.json.
+ */
+function handleFormManifestReq(req, res) {
+  readFormConfig(req.params.id).then(formConf => {
+    const schema = formConf.schema;
+    res.send({
+      "short_name": schema.title,
+      "name": schema.title + ' - Grand Forms',
+      "icons": [
+        {
+          "src": "favicon.ico",
+          "sizes": "64x64 32x32 24x24 16x16",
+          "type": "image/x-icon"
+        }
+      ],
+      "start_url": (req.query.basename || '') + '/forms/' + req.params.id + '/view',
+      "display": "standalone",
+      "theme_color": "#000000",
+      "background_color": "#ffffff"
+    });
+  });
 }
 
 /**
