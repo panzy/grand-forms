@@ -19,6 +19,7 @@ import 'react-toastify/dist/ReactToastify.min.css';
 import ErrorBoundary from './ErrorBoundary';
 import FormDestination from './FormDestination';
 import FormEditable from './FormEditable';
+import formWidgets from './formWidgets';
 
 
 const LOADING = 0;
@@ -208,6 +209,7 @@ class FormEditor extends Component {
           <Form
             schema={this.state.schema || {}}
             uiSchema={this.state.uiSchema || {}}
+            widgets={formWidgets}
             formData={this.state.formData}
             children={<span/>/* no default submit buttons */}
           />

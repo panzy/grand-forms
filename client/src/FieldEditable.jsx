@@ -3,6 +3,8 @@ import { ControlLabel } from "react-bootstrap";
 import EditInPlace from './EditInPlace';
 import Form from 'react-jsonschema-form';
 
+import formWidgets from './formWidgets';
+
 /**
  * @prop {string} id 用于帮助 onChange 回调定位被修改的字段（尤其当 name
  * 已改变时）。
@@ -39,6 +41,8 @@ class FieldEditable extends Component {
       'file', 'image', 'video',
       // other formats of string type
       'date', 'datetime', 'email',
+      // 既不是 type 也不是 format
+      '机动车号牌'
     ];
   }
 
@@ -48,6 +52,7 @@ class FieldEditable extends Component {
   getFieldType() {
     const {type, format} = this.state.schema;
     const uiOptions = this.state.uiSchema['ui:options'];
+    const uiWidget = this.state.uiSchema['ui:widget'];
     switch (format || '') {
       case 'data-url':
         if (uiOptions && /^image\//i.test(uiOptions.accept))
@@ -58,9 +63,13 @@ class FieldEditable extends Component {
       case 'date':
       case 'datetime':
       case 'email':
-        return format;
       default:
-        return type;
+        // '机动车号牌' 这种 field type，其 schema type/format 是
+        // string/undefined，只有检查 uiSchema['ui:widget'] 才能识别出来
+        if (uiWidget === 'VehicleIdWidget')
+          return '机动车号牌';
+        else
+          return type;
     }
   }
 
@@ -80,6 +89,7 @@ class FieldEditable extends Component {
           if (Object.keys(uiSchema['ui:options']).length === 0)
             delete uiSchema['ui:options'];
         }
+        delete uiSchema['ui:widget'];
         break;
       case 'image':
       case 'video':
@@ -88,16 +98,26 @@ class FieldEditable extends Component {
         if (!uiSchema['ui:options'])
           uiSchema['ui:options'] = {};
         uiSchema['ui:options'].accept = t + '/*';
+        delete uiSchema['ui:widget'];
         break;
       case 'date':
       case 'datetime':
       case 'email':
         schema.type = 'string';
         schema.format = t;
+        delete uiSchema['ui:widget'];
+        break;
+      case '机动车号牌':
+        schema.type = 'string';
+        // 不能设置 format = '机动车号牌'，否则遇到错误
+        // Error: unknown format "机动车号牌" is used in schema
+        delete schema.format;
+        uiSchema['ui:widget'] = 'VehicleIdWidget';
         break;
       default:
         schema.type = t;
         delete schema.format;
+        delete uiSchema['ui:widget'];
     }
     this.setState({schema, uiSchema}, this.notifyChange);
   }
@@ -155,10 +175,9 @@ class FieldEditable extends Component {
     var {name, schema, uiSchema} = this.state;
 
     // the input component: render as a Form without title and submit button.
-    var noTitle = {};
-    Object.assign(noTitle, schema);
-    noTitle.title = undefined;
+    const {title, ...noTitle} = schema;
     var inputComp = <Form schema={noTitle} uiSchema={uiSchema}
+      widgets={formWidgets}
       children={<span/>}
     />;
 

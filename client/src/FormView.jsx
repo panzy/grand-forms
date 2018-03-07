@@ -1,7 +1,8 @@
 import React, { Component } from "react";
 import Form from "react-jsonschema-form";
-
 import { ToastContainer, toast } from 'react-toastify';
+
+import formWidgets from './formWidgets';
 
 /** loading state constants. */
 const LOADING = 0;
@@ -90,6 +91,7 @@ class FormView extends Component {
       body = <Form
         schema={this.state.schema || {}}
         uiSchema={this.state.uiSchema || {}}
+        widgets={formWidgets}
         onSubmit={this.handleSubmit}/>;
     }
 
