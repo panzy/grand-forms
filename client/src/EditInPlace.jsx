@@ -144,7 +144,6 @@ export default class EditInPlace extends Component {
         className={classNames('edit-in-place-label', {'empty': !this.state.value})}
         onClick={isDisabled ? null : this.onEditEnable}>{this.state.value}</span>
     } else {
-      console.log(type)
       // Custom Inputs
       switch (type) {
         case "textarea":

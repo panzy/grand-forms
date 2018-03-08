@@ -100,7 +100,6 @@ class FormEditable extends Component {
   }
 
   onFieldChange(index, name, fieldSchema, fieldUiSchema) {
-    console.log('onFieldChange', index, name, fieldSchema, fieldUiSchema);
     var fields = this.state.fields;
     fields[index] = fieldSchema;
     fields[index].name = name;

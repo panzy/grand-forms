@@ -172,8 +172,6 @@ class FormEditor extends Component {
   }
 
   onFormEditableChange(schema, uiSchema) {
-    console.log('onFormEditableChange', schema, uiSchema);
-
     this.setState({
       schema,
       schemaJson: JSON.stringify(schema, null, "  "),
