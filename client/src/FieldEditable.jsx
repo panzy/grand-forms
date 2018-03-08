@@ -34,7 +34,7 @@ class FieldEditable extends Component {
     // 字段类型枚举
     // 这个列表是面向用户而非 JSONSchema 的，所以它并不一一对应于 JSONSchema
     // 中的 type 属性，事实上它与 type, format 属性，甚至 UI schema 都有关系。
-    this.types = [
+    this.FIELD_TYPES = [
       // real types
       'string', 'number', 'integer', 'boolean',
       // string with data-url format
@@ -47,12 +47,19 @@ class FieldEditable extends Component {
   }
 
   /**
-   * 从 this.types 中找出一个适合当前 {schema, uiSchema} 的值。
+   * 从 this.FIELD_TYPES 中找出一个适合当前 {schema, uiSchema} 的值。
    */
   getFieldType() {
     const {type, format} = this.state.schema;
     const uiOptions = this.state.uiSchema['ui:options'];
     const uiWidget = this.state.uiSchema['ui:widget'];
+
+    // '机动车号牌' 这种 field type，其 schema type/format 是
+    // string/undefined，只有检查 uiSchema['ui:widget'] 才能识别出来
+    if (type === 'string' && typeof format === 'undefined'
+      && uiWidget === 'VehicleIdWidget')
+      return '机动车号牌';
+
     switch (format || '') {
       case 'data-url':
         if (uiOptions && /^image\//i.test(uiOptions.accept))
@@ -64,17 +71,12 @@ class FieldEditable extends Component {
       case 'datetime':
       case 'email':
       default:
-        // '机动车号牌' 这种 field type，其 schema type/format 是
-        // string/undefined，只有检查 uiSchema['ui:widget'] 才能识别出来
-        if (uiWidget === 'VehicleIdWidget')
-          return '机动车号牌';
-        else
-          return type;
+        return type;
     }
   }
 
   /**
-   * 用 this.types 中的一个值设置 {schema, uiSchema}。
+   * 用 this.FIELD_TYPES 中的一个值设置 {schema, uiSchema}。
    */
   setFieldType(t) {
     var {schema, uiSchema} = this.state;
@@ -236,7 +238,7 @@ class FieldEditable extends Component {
           value={this.getFieldType()}
           name='type'
           type='select'
-          dropDownOptions={this.types}
+          dropDownOptions={this.FIELD_TYPES}
           onChange={this.onAttrChange}
         />
       </div>
