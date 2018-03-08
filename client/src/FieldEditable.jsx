@@ -177,8 +177,11 @@ class FieldEditable extends Component {
     var {name, schema, uiSchema} = this.state;
 
     // the input component: render as a Form without title and submit button.
-    const {title, ...noTitle} = schema;
-    var inputComp = <Form schema={noTitle} uiSchema={uiSchema}
+    //
+    // 之所以需要深克隆 schema 和 uiSchema 对象，是因为 <Form> 检查的是对象的引用而非内容。
+    const {title, ...schemaCopy} = schema; // 已知 schema 没有子对象，所以不需 deep clone
+    const uiSchemaCopy = JSON.parse(JSON.stringify(uiSchema)); // deep clone
+    var inputComp = <Form schema={schemaCopy} uiSchema={uiSchemaCopy}
       widgets={formWidgets}
       children={<span/>}
     />;
