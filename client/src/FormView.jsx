@@ -63,20 +63,67 @@ class FormView extends Component {
 
   handleSubmit(event) {
     var url = this.props.basename + '/api/forms/' + this.props.id;
-    fetch(url, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: new Headers({
-        "Content-Type": "application/json",
-      }),
-      body: JSON.stringify(event.formData)
-    }).then(r => {
-      if (r.ok) {
-        toast.success('已提交');
-      } else {
-        toast.error('提交失败： ' + r.status + ' ' + r.statusText);
-        r.text().then(text => console.error(text));
+
+    // 在提交之前可能要对 form data 进行一些预处理
+    let taskPromises = [];
+
+    // resize image
+    const PREFERED_SIZE = 600; // TODO configurable
+    Object.entries(this.state.schema.properties || []).forEach(([key, field]) => {
+      if (field.format === 'data-url' && event.formData[key] && event.formData[key].startsWith('data:image/')) {
+
+        // 从 form data 中的 image data url 创建 Image 对象
+        let img = new Image();
+        img.src = event.formData[key];
+
+        let promise = new Promise((resolve, reject) => {
+          img.onload = () => {
+            let width = img.naturalWidth;
+            let height = img.naturalHeight;
+
+            let destWidth = width;
+            let destHeight = height;
+
+            while (destWidth > PREFERED_SIZE && destHeight > PREFERED_SIZE) {
+              destWidth /= 2;
+              destHeight /= 2;
+            }
+
+            let canvas = document.createElement('canvas');
+            canvas.width = destWidth;
+            canvas.height = destHeight;
+            let ctx = canvas.getContext('2d');
+            ctx.imageSmoothingQuality = 'high';
+            ctx.imageSmoothingEnabled = true;
+            ctx.drawImage(img, 0, 0, destWidth, destHeight);
+            event.formData[key] = canvas.toDataURL();
+            resolve();
+          };
+          img.onerror = () => {
+            reject();
+          };
+        });
+
+        taskPromises.push(promise);
       }
+    });
+
+    Promise.all(taskPromises).then(() => {
+      fetch(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: new Headers({
+          "Content-Type": "application/json",
+        }),
+        body: JSON.stringify(event.formData)
+      }).then(r => {
+        if (r.ok) {
+          toast.success('已提交');
+        } else {
+          toast.error('提交失败： ' + r.status + ' ' + r.statusText);
+          r.text().then(text => console.error(text));
+        }
+      });
     });
   }
 
